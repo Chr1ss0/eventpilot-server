@@ -25,24 +25,31 @@ export async function loginUser(req: Request, res: Response) {
   createTokenAndRes(res, result._id);
   return res.status(200).json({ message: 'Login erfolgreich' });
 }
+
 export async function validateUser(_: Request, res: Response) {
   res.status(200).json({ message: 'Token gültig' });
 }
-// export async function getUser(req: Request, res: Response) {
-//   res.end('login');
-// }
-// export async function getUserField(req: Request, res: Response) {
-//   res.end('login');
-// }
+
+export async function getUser(req: Request, res: Response) {
+  const result = await User.data(req);
+  if (typeof result === 'number') return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
+  return res.status(200).json({ userInfo: result.userInfo, bookmarks: result.bookmarks, reviews: result.reviews });
+}
+
 // export async function addReview(req: Request, res: Response) {
 //   res.end('login');
 // }
-// export async function bookmarkEvent(req: Request, res: Response) {
-//   res.end('login');
-// }
+
+export async function bookmarkEvent(req: Request, res: Response) {
+  const result = await User.bookmark(req);
+  if (typeof result === 'number') return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
+  return res.status(200).json({ bookmarks: result.bookmarks });
+}
+
 // export async function followUser(req: Request, res: Response) {
 //   res.end('login');
 // }
+
 // export async function editUser(req: Request, res: Response) {
 //   res.end('login');
 // }

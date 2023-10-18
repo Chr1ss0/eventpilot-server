@@ -20,6 +20,7 @@ export interface EventInter extends Document {
   };
 }
 
-export interface EventFuncInter extends Model<EventInter> {
-  createNew(req: Request): Promise<EventInter | number>;
+type ResponseType = EventInter | number;
+export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
+  createNew(req: Request): Promise<T>;
 }

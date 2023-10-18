@@ -1,22 +1,20 @@
 import express from 'express';
 import {
   // addReview,
-  // bookmarkEvent,
+  bookmarkEvent,
   // editUser,
   // followUser,
-  // getUser,
-  // getUserField,
+  getUser,
   validateUser,
 } from '../controller/userController';
 
 const userRoutes = express.Router();
 
 userRoutes.get('/validate', validateUser);
-// userRoutes.get('/user/:field', getUserField);
-// userRoutes.get('/user', getUser);
-//
+userRoutes.get('/data', getUser);
+
 // userRoutes.post('/review', addReview);
-// userRoutes.post('/bookmark/:event', bookmarkEvent);
+userRoutes.post('/bookmark/:event', bookmarkEvent);
 // userRoutes.post('/follow/:user', followUser);
 //
 // userRoutes.put('edit', editUser);

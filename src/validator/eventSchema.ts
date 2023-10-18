@@ -17,14 +17,14 @@ const eventValidateSchema = [
   body('endDate').isDate().withMessage('Das Datum muss in einem gültigen Zeitformat angegeben werden'),
   body('location')
     .isString()
-    .withMessage('Die Location muss ein String sein.')
-    .notEmpty()
-    .withMessage('Preis darf nicht leer sein.'),
-  body('stock')
-    .isNumeric()
-    .withMessage('Die Anzahl sollte eine Zahl sein.')
-    .notEmpty()
-    .withMessage('Anzahl darf nicht leer sein.'),
+    .withMessage('Die Ort muss ein String sein.')
+    .isLength({ min: 5, max: 50 })
+    .withMessage('Der Ort sollte zwischen 5 und 50 Zeichen enthalten'),
+  body('description')
+    .isString()
+    .withMessage('Die Beschreibung muss ein String sein.')
+    .isLength({ min: 20, max: 150 })
+    .withMessage('Die Beschreibung sollte zwischen 20 und 150 Zeichen enthalten'),
 ];
 
 export default eventValidateSchema;

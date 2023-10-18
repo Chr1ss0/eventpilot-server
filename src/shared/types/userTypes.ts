@@ -19,9 +19,18 @@ export interface UserInter extends Document {
     rating: number;
     creationDate: string;
   }[];
+  bookmarks: string[];
+  connections: {
+    following: string[];
+    followers: string[];
+  };
 }
 
-export interface UserFuncInter extends Model<UserInter> {
-  register(req: Request): Promise<UserInter | number>;
-  login(req: Request): Promise<UserInter | number>;
+type ResponseType = UserInter | number;
+
+export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
+  register(req: Request): Promise<T>;
+  login(req: Request): Promise<T>;
+  bookmark(req: Request): Promise<T>;
+  data(req: Request): Promise<T>;
 }

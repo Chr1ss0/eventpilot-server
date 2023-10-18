@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
-import { UserInter, UserFuncInter } from '../shared/types/userTypes';
+import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
+import { tokenUserId } from '../utils/token';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
@@ -41,21 +42,41 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
         type: String,
       },
     },
-    reviews: [
+  },
+  reviews: [
+    {
+      firstName: {
+        type: String,
+      },
+      content: {
+        type: String,
+      },
+      rating: {
+        type: Number,
+      },
+      creationDate: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  bookmarks: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  connections: {
+    following: [
       {
-        firstName: {
-          type: String,
-        },
-        content: {
-          type: String,
-        },
-        rating: {
-          type: Number,
-        },
-        creationDate: {
-          type: Date,
-          default: Date.now,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
       },
     ],
   },
@@ -81,13 +102,44 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
   }
 };
 
-userSchema.statics.login = async function login(req: Request) {
+userSchema.statics.login = async function login(req: Request): Promise<UserInter | number> {
   const { email, password } = req.body;
   try {
     const user = await this.findOne({ email });
+
     if (!user || password !== user.password) return 403;
 
     return user;
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
+    return 500;
+  }
+};
+
+userSchema.statics.bookmark = async function bookmark(req: Request): Promise<UserInter | number> {
+  try {
+    const userId = tokenUserId(req);
+    const { event } = req.params;
+    const user = await this.findById(userId);
+
+    if (!user) return 500;
+
+    if (user.bookmarks.includes(event)) await this.findByIdAndUpdate(userId, { $pull: { bookmarks: event } });
+    else await this.findByIdAndUpdate(userId, { $addToSet: { bookmarks: event } });
+
+    return (await this.findById(userId)) as UserInter;
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
+    return 500;
+  }
+};
+
+userSchema.statics.data = async function data(req: Request) {
+  try {
+    const userId = tokenUserId(req);
+    return await this.findById(userId);
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;

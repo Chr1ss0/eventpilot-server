@@ -1,5 +1,5 @@
 import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 export const tokenConfig = { httpOnly: true, secure: true, maxAge: 3600000 };
 const { JWT_SECRET } = process.env;
@@ -27,6 +27,11 @@ export function deleteToken(res: Response) {
 
 export function createTokenAndRes(res: Response, id: string) {
   const token = createToken({ user: id });
-  console.log(token);
   res.cookie('eventpilot', token, tokenConfig);
+}
+
+export function tokenUserId(req: Request): string {
+  const { eventpilot } = req.cookies;
+  const userId = verifyToken(eventpilot);
+  return userId.user;
 }
