@@ -4,6 +4,7 @@ import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import multer from 'multer';
 import encryptRoutes from './routes/encryptRoutes';
 import { startServer, app } from './utils/serverConfig';
 import corsOption from './utils/corsConfig';
@@ -12,14 +13,16 @@ import userRoutes from './routes/userRoutes';
 import encrypt from './middleware/encryptMiddleware';
 import auth from './middleware/authMiddleware';
 
+const upload = multer();
+
 app.use(morgan('dev'));
 app.use(cors(corsOption));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/auth', encrypt, encryptRoutes);
-app.use('/api/event', auth, eventRoutes);
-app.use('/api/user', auth, userRoutes);
+app.use('/api/auth', upload.none(), encrypt, encryptRoutes);
+app.use('/api/event', upload.none(), auth, eventRoutes);
+app.use('/api/user', upload.none(), auth, userRoutes);
 
 (async () => {
   try {
