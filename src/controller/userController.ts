@@ -19,27 +19,27 @@ export async function registerUser(req: Request, res: Response) {
   // eslint-disable-next-line no-underscore-dangle
   return res.status(200).json({ message: `User: ${result._id}, erfolgreich registriert` });
 }
-export async function loginUser(req: Request, res: Response) {
-  res.end('login');
-}
-export async function validateUser(req: Request, res: Response) {
-  res.end('login');
-}
-export async function getUser(req: Request, res: Response) {
-  res.end('login');
-}
-export async function getUserField(req: Request, res: Response) {
-  res.end('login');
-}
-export async function addReview(req: Request, res: Response) {
-  res.end('login');
-}
-export async function bookmarkEvent(req: Request, res: Response) {
-  res.end('login');
-}
-export async function followUser(req: Request, res: Response) {
-  res.end('login');
-}
-export async function editUser(req: Request, res: Response) {
-  res.end('login');
-}
+// export async function loginUser(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function validateUser(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function getUser(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function getUserField(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function addReview(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function bookmarkEvent(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function followUser(req: Request, res: Response) {
+//   res.end('login');
+// }
+// export async function editUser(req: Request, res: Response) {
+//   res.end('login');
+// }
