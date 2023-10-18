@@ -3,9 +3,9 @@ import { verifyToken } from '../utils/token';
 import { notAcceptedError } from '../utils/errorHandlers';
 
 export default function auth(req: Request, res: Response, next: NextFunction) {
-  const { token } = req.cookies;
+  const { eventpilot } = req.cookies;
   try {
-    verifyToken(token);
+    verifyToken(eventpilot);
     next();
   } catch (error) {
     console.error(error);

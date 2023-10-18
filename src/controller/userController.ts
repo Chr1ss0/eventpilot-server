@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createToken } from '../utils/token';
+import { createTokenAndRes } from '../utils/token';
 import User from '../models/User';
 import { conflictError, internalServerError } from '../utils/errorHandlers';
 
@@ -10,21 +10,24 @@ export async function registerUser(req: Request, res: Response) {
     return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
   }
   // eslint-disable-next-line no-underscore-dangle
-  const token = createToken({ user: result._id });
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: true,
-    maxAge: 3600000,
-  });
+  createTokenAndRes(res, result._id);
   // eslint-disable-next-line no-underscore-dangle
   return res.status(200).json({ message: `User: ${result._id}, erfolgreich registriert` });
 }
-// export async function loginUser(req: Request, res: Response) {
-//   res.end('login');
-// }
-// export async function validateUser(req: Request, res: Response) {
-//   res.end('login');
-// }
+
+export async function loginUser(req: Request, res: Response) {
+  const result = await User.login(req);
+  if (typeof result === 'number') {
+    if (result === 403) return conflictError(res, 'Login Daten sind ungültig.');
+    return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
+  }
+  // eslint-disable-next-line no-underscore-dangle
+  createTokenAndRes(res, result._id);
+  return res.status(200).json({ message: 'Login erfolgreich' });
+}
+export async function validateUser(_: Request, res: Response) {
+  res.status(200).json({ message: 'Token gültig' });
+}
 // export async function getUser(req: Request, res: Response) {
 //   res.end('login');
 // }

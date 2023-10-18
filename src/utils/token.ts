@@ -1,6 +1,7 @@
 import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
 import { Response } from 'express';
 
+export const tokenConfig = { httpOnly: true, secure: true, maxAge: 3600000 };
 const { JWT_SECRET } = process.env;
 
 if (!JWT_SECRET || typeof JWT_SECRET !== 'string') {
@@ -20,6 +21,12 @@ export function verifyToken(token: string): JwtPayload {
 }
 
 export function deleteToken(res: Response) {
-  res.clearCookie('token');
+  res.clearCookie('eventpilot');
   res.sendStatus(200);
+}
+
+export function createTokenAndRes(res: Response, id: string) {
+  const token = createToken({ user: id });
+  console.log(token);
+  res.cookie('eventpilot', token, tokenConfig);
 }

@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
-import { CustomErrorT, UserI, UserModel } from '../shared/types/modelTypes';
+import { UserInter, UserFuncInter } from '../shared/types/userTypes';
+import { CustomErrType } from '../shared/types/sharedTypes';
 
-const userSchema = new mongoose.Schema<UserI, UserModel>({
+const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
     type: String,
     unique: true,
@@ -60,7 +61,7 @@ const userSchema = new mongoose.Schema<UserI, UserModel>({
   },
 });
 
-userSchema.statics.register = async function register(req: Request) {
+userSchema.statics.register = async function register(req: Request): Promise<UserInter | number> {
   const { email, password, firstName, lastName } = req.body;
   const user = new this({
     email,
@@ -70,17 +71,30 @@ userSchema.statics.register = async function register(req: Request) {
       lastName,
     },
   });
-
   try {
     await user.save();
     return user;
-  } catch (error: CustomErrorT | unknown) {
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
+    return 500;
+  }
+};
+
+userSchema.statics.login = async function login(req: Request) {
+  const { email, password } = req.body;
+  try {
+    const user = await this.findOne({ email });
+    if (!user || password !== user.password) return 403;
+
+    return user;
+  } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
     return 500;
   }
 };
 
-const User = mongoose.model<UserI, UserModel>('User', userSchema);
+const User = mongoose.model<UserInter, UserFuncInter>('User', userSchema);
 
 export default User;

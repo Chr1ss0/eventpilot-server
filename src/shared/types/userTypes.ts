@@ -1,11 +1,8 @@
 import { Document, Model } from 'mongoose';
 import { Request } from 'express';
+import { CloudUrlType } from './sharedTypes';
 
-export type CloudinaryURLT = {
-  secure_url: string;
-  public_id: string;
-};
-export interface UserI extends Document {
+export interface UserInter extends Document {
   email: string;
   password: string;
   userInfo: {
@@ -14,7 +11,7 @@ export interface UserI extends Document {
     aboutMe: string;
     interest: string[];
     defaultLocation: string;
-    avatar: CloudinaryURLT;
+    avatar: CloudUrlType;
   };
   reviews: {
     firstName: string;
@@ -24,9 +21,7 @@ export interface UserI extends Document {
   }[];
 }
 
-export type CustomErrorT = {
-  code: number;
-};
-export interface UserModel extends Model<UserI> {
-  register(req: Request): Promise<UserI | number>;
+export interface UserFuncInter extends Model<UserInter> {
+  register(req: Request): Promise<UserInter | number>;
+  login(req: Request): Promise<UserInter | number>;
 }

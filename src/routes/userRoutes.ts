@@ -1,17 +1,17 @@
-// import express from 'express';
-// import {
-//   addReview,
-//   bookmarkEvent,
-//   editUser,
-//   followUser,
-//   getUser,
-//   getUserField,
-//   validateUser,
-// } from '../controller/userController';
-//
-// const userRoutes = express.Router();
-//
-// userRoutes.get('/validate', validateUser);
+import express from 'express';
+import {
+  // addReview,
+  // bookmarkEvent,
+  // editUser,
+  // followUser,
+  // getUser,
+  // getUserField,
+  validateUser,
+} from '../controller/userController';
+
+const userRoutes = express.Router();
+
+userRoutes.get('/validate', validateUser);
 // userRoutes.get('/user/:field', getUserField);
 // userRoutes.get('/user', getUser);
 //
@@ -23,4 +23,4 @@
 //
 // userRoutes.patch('update/:field', editUser);
 //
-// export default userRoutes;
+export default userRoutes;
