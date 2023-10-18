@@ -1,4 +1,5 @@
-import { Document } from 'mongoose';
+import { Document, Model } from 'mongoose';
+import { Request } from 'express';
 
 export type CloudinaryURLT = {
   secure_url: string;
@@ -21,4 +22,11 @@ export interface UserI extends Document {
     rating: number;
     creationDate: string;
   }[];
+}
+
+export type CustomErrorT = {
+  code: number;
+};
+export interface UserModel extends Model<UserI> {
+  register(req: Request): Promise<UserI | number>;
 }

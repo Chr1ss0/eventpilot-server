@@ -1,13 +1,6 @@
-import mongoose, { Model } from 'mongoose';
+import mongoose from 'mongoose';
 import { Request } from 'express';
-import { UserI } from '../shared/types/modelTypes';
-
-type CustomErrorT = {
-  code: number;
-};
-interface UserModel extends Model<UserI> {
-  register(req: Request): Promise<UserI | number>;
-}
+import { CustomErrorT, UserI, UserModel } from '../shared/types/modelTypes';
 
 const userSchema = new mongoose.Schema<UserI, UserModel>({
   email: {
