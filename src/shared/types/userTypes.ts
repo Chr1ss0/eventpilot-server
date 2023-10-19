@@ -34,4 +34,6 @@ export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   bookmark(req: Request): Promise<T>;
   data(req: Request): Promise<T>;
   postReview(req: Request): Promise<T>;
+  editLocation(req: Request): Promise<T>;
+  follow(req: Request): Promise<T>;
 }

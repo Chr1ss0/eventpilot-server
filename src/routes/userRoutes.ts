@@ -3,10 +3,12 @@ import {
   addReview,
   // addReview,
   bookmarkEvent,
+  patchUser,
   // editUser,
   // followUser,
   getUser,
   validateUser,
+  followUser,
 } from '../controller/userController';
 
 const userRoutes = express.Router();
@@ -16,10 +18,10 @@ userRoutes.get('/data', getUser);
 
 userRoutes.post('/review', addReview);
 userRoutes.post('/bookmark/:event', bookmarkEvent);
-// userRoutes.post('/follow/:user', followUser);
-//
+userRoutes.post('/follow/:idFollowing', followUser);
+
 // userRoutes.put('edit', editUser);
-//
-// userRoutes.patch('update/:field', editUser);
-//
+
+userRoutes.patch('/update', patchUser);
+
 export default userRoutes;

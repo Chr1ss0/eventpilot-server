@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 app.use('/api/auth', upload.none(), encrypt, encryptRoutes);
 app.use('/api/event', upload.none(), auth, eventRoutes);
-app.use('/api/user', auth, userRoutes);
+app.use('/api/user', upload.none(), auth, userRoutes);
 
 (async () => {
   try {

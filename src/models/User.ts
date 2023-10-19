@@ -171,6 +171,33 @@ userSchema.statics.postReview = async function postReview(req: Request) {
   }
 };
 
+userSchema.statics.editLocation = async function editLocation(req: Request) {
+  try {
+    const { defaultLocation } = req.body;
+    const userId = tokenUserId(req);
+    await this.findByIdAndUpdate(userId, { $set: { 'userInfo.defaultLocation': defaultLocation } });
+    return await this.findById(userId);
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
+    return 500;
+  }
+};
+
+userSchema.statics.follow = async function follow(req: Request) {
+  try {
+    const { idFollowing } = req.params;
+    const userId = tokenUserId(req);
+    await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': idFollowing } });
+    await this.findByIdAndUpdate(idFollowing, { $addToSet: { 'connections.followers': userId } });
+    return await this.findById(userId);
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
+    return 500;
+  }
+};
+
 const User = mongoose.model<UserInter, UserFuncInter>('User', userSchema);
 
 export default User;

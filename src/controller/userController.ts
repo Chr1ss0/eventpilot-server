@@ -48,10 +48,14 @@ export async function bookmarkEvent(req: Request, res: Response) {
   return res.status(200).json({ bookmarks: result.bookmarks });
 }
 
-// export async function followUser(req: Request, res: Response) {
-//   res.end('login');
-// }
+export async function followUser(req: Request, res: Response) {
+  const result = await User.follow(req);
+  if (typeof result === 'number') return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
+  return res.status(200).json({ following: result.connections.following });
+}
 
-// export async function editUser(req: Request, res: Response) {
-//   res.end('login');
-// }
+export async function patchUser(req: Request, res: Response) {
+  const result = await User.editLocation(req);
+  if (typeof result === 'number') return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
+  return res.status(200).json({ location: result.userInfo });
+}
