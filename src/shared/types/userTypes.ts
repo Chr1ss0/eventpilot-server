@@ -1,4 +1,4 @@
-import { Document, Model } from 'mongoose';
+import { Document, Model, ObjectId } from 'mongoose';
 import { Request } from 'express';
 import { CloudUrlType } from './sharedTypes';
 
@@ -19,10 +19,10 @@ export interface UserInter extends Document {
     rating: number;
     creationDate: string;
   }[];
-  bookmarks: string[];
+  bookmarks: ObjectId[];
   connections: {
-    following: string[];
-    followers: string[];
+    following: ObjectId[];
+    followers: ObjectId[];
   };
 }
 
@@ -33,4 +33,5 @@ export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   login(req: Request): Promise<T>;
   bookmark(req: Request): Promise<T>;
   data(req: Request): Promise<T>;
+  postReview(req: Request): Promise<T>;
 }

@@ -1,10 +1,10 @@
-import { Model, Document } from 'mongoose';
+import { Model, Document, ObjectId } from 'mongoose';
 import { Request } from 'express';
 import { CloudUrlType } from './sharedTypes';
 
 export type CategoryType = 'Sports' | 'Music' | 'Art' | 'Food';
 export interface EventInter extends Document {
-  organizer: string;
+  organizer: ObjectId;
   eventInfo: {
     title: string;
     category: CategoryType;
@@ -15,12 +15,14 @@ export interface EventInter extends Document {
   };
   cover: CloudUrlType[];
   registeredUser: {
-    _id: string;
-    secure_url: string;
+    _id: ObjectId;
   };
 }
 
 type ResponseType = EventInter | number;
 export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
   createNew(req: Request): Promise<T>;
+  regUser(req: Request): Promise<T>;
+  getAll(): Promise<T>;
+  getOne(req: Request): Promise<T>;
 }

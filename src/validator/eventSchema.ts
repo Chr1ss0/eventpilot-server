@@ -13,8 +13,8 @@ const eventValidateSchema = [
     .withMessage('Die Kategorie sollte ein String sein.')
     .isIn(['Sports', 'Music', 'Art', 'Food'])
     .withMessage('Die Kategorie muss Sports, Music, Art, Food enthalten'),
-  body('startDate').isDate().withMessage('Das Datum muss in einem gültigen Zeitformat angegeben werden'),
-  body('endDate').isDate().withMessage('Das Datum muss in einem gültigen Zeitformat angegeben werden'),
+  body('startDate').notEmpty().withMessage('Das Start-Datum darf nicht leer sein'),
+  body('endDate').notEmpty().withMessage('Das End-Datum darf nicht leer sein'),
   body('location')
     .isString()
     .withMessage('Die Ort muss ein String sein.')

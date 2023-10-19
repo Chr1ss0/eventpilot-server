@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   bookmarks: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Event',
     },
   ],
   connections: {
@@ -125,6 +125,8 @@ userSchema.statics.bookmark = async function bookmark(req: Request): Promise<Use
 
     if (!user) return 500;
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     if (user.bookmarks.includes(event)) await this.findByIdAndUpdate(userId, { $pull: { bookmarks: event } });
     else await this.findByIdAndUpdate(userId, { $addToSet: { bookmarks: event } });
 
@@ -140,6 +142,28 @@ userSchema.statics.data = async function data(req: Request) {
   try {
     const userId = tokenUserId(req);
     return await this.findById(userId);
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
+    return 500;
+  }
+};
+
+userSchema.statics.postReview = async function postReview(req: Request) {
+  try {
+    const { content, rating, receiver } = req.body;
+    const userId = tokenUserId(req);
+    const user = await this.findById(userId);
+
+    if (!user) return 500;
+    const { firstName } = user.userInfo;
+    const review = {
+      firstName,
+      content,
+      rating,
+    };
+    await this.findByIdAndUpdate(receiver, { $addToSet: { reviews: review } });
+    return await this.findById(receiver);
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;

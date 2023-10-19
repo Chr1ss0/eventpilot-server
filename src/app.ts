@@ -27,7 +27,7 @@ app.use('/api/user', auth, userRoutes);
 (async () => {
   try {
     await startServer();
-    console.log('Server is Online');
+    console.log('Server is Online'); // Even if connection Timedout
   } catch (error) {
     console.log(`Error while starting Server: ${error}`);
   }

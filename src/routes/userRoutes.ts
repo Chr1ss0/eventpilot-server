@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  addReview,
   // addReview,
   bookmarkEvent,
   // editUser,
@@ -13,7 +14,7 @@ const userRoutes = express.Router();
 userRoutes.get('/validate', validateUser);
 userRoutes.get('/data', getUser);
 
-// userRoutes.post('/review', addReview);
+userRoutes.post('/review', addReview);
 userRoutes.post('/bookmark/:event', bookmarkEvent);
 // userRoutes.post('/follow/:user', followUser);
 //

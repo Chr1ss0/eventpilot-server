@@ -36,9 +36,11 @@ export async function getUser(req: Request, res: Response) {
   return res.status(200).json({ userInfo: result.userInfo, bookmarks: result.bookmarks, reviews: result.reviews });
 }
 
-// export async function addReview(req: Request, res: Response) {
-//   res.end('login');
-// }
+export async function addReview(req: Request, res: Response) {
+  const result = await User.postReview(req);
+  if (typeof result === 'number') return internalServerError(res, 'Ein Interner Serverfehler ist aufgetreten');
+  return res.status(200).json({ reviews: result.reviews });
+}
 
 export async function bookmarkEvent(req: Request, res: Response) {
   const result = await User.bookmark(req);
