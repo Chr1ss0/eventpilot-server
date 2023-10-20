@@ -121,6 +121,32 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
   }
 };
 
+userSchema.statics.edit = async function edit(req: Request): Promise<UserInter | number> {
+  const { email, password, firstName, lastName, zipCode } = req.body;
+  const { placeName, state, latitude, longitude } = await getZipData(zipCode);
+  const user = new this({
+    email,
+    password,
+    userInfo: {
+      firstName,
+      lastName,
+      defaultLocation: {
+        placeName,
+        state,
+        coordinates: [latitude, longitude],
+      },
+    },
+  });
+  try {
+    await user.save();
+    return user;
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
+    return 500;
+  }
+};
+
 userSchema.statics.login = async function login(req: Request): Promise<UserInter | number> {
   const { email, password } = req.body;
   try {

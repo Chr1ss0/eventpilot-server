@@ -122,11 +122,7 @@ eventSchema.statics.regUser = async function regUser(req: Request) {
 
 eventSchema.statics.getAll = async function getAll() {
   try {
-    return await this.find()
-      .populate('registeredUser', 'userInfo.avatar.secure_url')
-      .populate('organizer', 'userInfo.firstName userInfo.lastName userInfo.avatar.secure_url')
-      .lean()
-      .exec();
+    return await this.find().populate('registeredUser', 'userInfo.avatar.secure_url').lean().exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
@@ -137,7 +133,10 @@ eventSchema.statics.getAll = async function getAll() {
 eventSchema.statics.getOne = async function getOne(req) {
   const { event } = req.params;
   try {
-    return await this.findById(event).populate('registeredUser', 'userInfo.avatar.secure_url organizer').exec();
+    return await this.findById(event)
+      .populate('registeredUser', 'userInfo.avatar.secure_url organizer')
+      .populate('organizer', 'userInfo.firstName userInfo.lastName userInfo.avatar.secure_url')
+      .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
