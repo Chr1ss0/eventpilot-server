@@ -34,7 +34,7 @@ export async function logoutUser(_: Request, res: Response) {
 }
 
 export async function validateUser(_: Request, res: Response) {
-  res.status(200).json({ message: 'Token invalid' });
+  res.status(200).json({ message: 'Token valid' });
 }
 
 export async function getUser(req: Request, res: Response) {
