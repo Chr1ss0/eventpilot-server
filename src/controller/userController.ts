@@ -25,7 +25,7 @@ export async function loginUser(req: Request, res: Response) {
   createTokenAndRes(res, result._id);
   return res.status(200).json({ message: 'Login successfully' });
 }
-export async function editUser(req: Request, res: Response) {
+export async function editUser(_: Request, res: Response) {
   res.end();
 }
 
