@@ -12,6 +12,7 @@ import eventRoutes from './routes/eventRoutes';
 import userRoutes from './routes/userRoutes';
 import encrypt from './middleware/encryptMiddleware';
 import auth from './middleware/authMiddleware';
+import utilityRoutes from './routes/utilityRoutes';
 
 const upload = multer();
 
@@ -21,13 +22,13 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/api/auth', upload.none(), encrypt, encryptRoutes);
-app.use('/api/event', upload.none(), auth, eventRoutes);
-app.use('/api/user', upload.none(), auth, userRoutes);
+app.use('/api/event', auth, eventRoutes);
+app.use('/api/user', auth, userRoutes);
+app.use('/api/utility', utilityRoutes);
 
 (async () => {
   try {
     await startServer();
-    console.log('Server is Online'); // Even if connection Timedout
   } catch (error) {
     console.log(`Error while starting Server: ${error}`);
   }

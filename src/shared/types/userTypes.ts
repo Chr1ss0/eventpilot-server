@@ -1,6 +1,6 @@
 import { Document, Model, ObjectId } from 'mongoose';
 import { Request } from 'express';
-import { CloudUrlType } from './sharedTypes';
+import { CloudUrlType, LocationType } from './sharedTypes';
 
 export interface UserInter extends Document {
   email: string;
@@ -10,7 +10,7 @@ export interface UserInter extends Document {
     lastName: string;
     aboutMe: string;
     interest: string[];
-    defaultLocation: string;
+    defaultLocation: LocationType;
     avatar: CloudUrlType;
   };
   reviews: {
@@ -33,6 +33,7 @@ export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   login(req: Request): Promise<T>;
   bookmark(req: Request): Promise<T>;
   data(req: Request): Promise<T>;
+  dataId(req: Request): Promise<T>;
   postReview(req: Request): Promise<T>;
   editLocation(req: Request): Promise<T>;
   follow(req: Request): Promise<T>;

@@ -1,7 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import cloudinary from 'cloudinary';
 import * as util from 'util';
-
 import { CloudUrlType } from '../shared/types/sharedTypes';
 
 export function uploadImage(buffer: Buffer): Promise<CloudUrlType> {

@@ -3,6 +3,7 @@ import { Request } from 'express';
 import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
+import { getZipData } from '../utils/geoHelper';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
@@ -30,7 +31,19 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
       type: [String],
     },
     defaultLocation: {
-      type: String,
+      placeName: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        index: '2dsphere',
+        required: true,
+      },
     },
     avatar: {
       secure_url: {
@@ -83,13 +96,19 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
 });
 
 userSchema.statics.register = async function register(req: Request): Promise<UserInter | number> {
-  const { email, password, firstName, lastName } = req.body;
+  const { email, password, firstName, lastName, zipCode } = req.body;
+  const { placeName, state, latitude, longitude } = await getZipData(zipCode);
   const user = new this({
     email,
     password,
     userInfo: {
       firstName,
       lastName,
+      defaultLocation: {
+        placeName,
+        state,
+        coordinates: [latitude, longitude],
+      },
     },
   });
   try {
@@ -141,6 +160,17 @@ userSchema.statics.bookmark = async function bookmark(req: Request): Promise<Use
 userSchema.statics.data = async function data(req: Request) {
   try {
     const userId = tokenUserId(req);
+    return await this.findById(userId);
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
+    return 500;
+  }
+};
+
+userSchema.statics.dataId = async function dataId(req: Request) {
+  const { userId } = req.params;
+  try {
     return await this.findById(userId);
   } catch (error: CustomErrType | unknown) {
     console.log(error);

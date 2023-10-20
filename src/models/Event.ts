@@ -3,6 +3,8 @@ import { Request } from 'express';
 import { EventFuncInter, EventInter } from '../shared/types/eventTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
+import { getZipData } from '../utils/geoHelper';
+import { uploadImage } from '../utils/imageService';
 
 const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
   organizer: {
@@ -16,7 +18,7 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
     },
     category: {
       type: String,
-      enum: ['Sports', 'Music', 'Art', 'Food'],
+      enum: ['Sport', 'Music', 'Art', 'Food'],
       required: true,
     },
     startDate: {
@@ -28,8 +30,19 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
       required: true,
     },
     location: {
-      type: String,
-      required: true,
+      placeName: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        index: '2dsphere',
+        required: true,
+      },
     },
     description: {
       type: String,
@@ -57,20 +70,33 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
 });
 
 eventSchema.statics.createNew = async function createNew(req: Request) {
-  const { title, category, startDate, endDate, location, description } = req.body;
-  const organizer = tokenUserId(req);
-  const event = new this({
-    organizer,
-    eventInfo: {
-      title,
-      category,
-      startDate,
-      endDate,
-      location,
-      description,
-    },
-  });
   try {
+    const { title, category, startDate, endDate, zipCode, description } = req.body;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { secure_url, public_id } = await uploadImage(req.file.buffer);
+    const { placeName, state, latitude, longitude } = await getZipData(zipCode);
+    const organizer = tokenUserId(req);
+    const event = new this({
+      organizer,
+      eventInfo: {
+        title,
+        category,
+        startDate,
+        endDate,
+        location: {
+          placeName,
+          state,
+          coordinates: [latitude, longitude],
+        },
+        description,
+      },
+      cover: {
+        secure_url,
+        public_id,
+      },
+    });
     await event.save();
     return event;
   } catch (error: CustomErrType | unknown) {
@@ -96,7 +122,11 @@ eventSchema.statics.regUser = async function regUser(req: Request) {
 
 eventSchema.statics.getAll = async function getAll() {
   try {
-    return await this.find().populate('registeredUser', 'userInfo.avatar.secure_url').lean().exec();
+    return await this.find()
+      .populate('registeredUser', 'userInfo.avatar.secure_url')
+      .populate('organizer', 'userInfo.firstName userInfo.lastName userInfo.avatar.secure_url')
+      .lean()
+      .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
@@ -107,7 +137,7 @@ eventSchema.statics.getAll = async function getAll() {
 eventSchema.statics.getOne = async function getOne(req) {
   const { event } = req.params;
   try {
-    return await this.findById(event).populate('registeredUser', 'userInfo.avatar.secure_url').exec();
+    return await this.findById(event).populate('registeredUser', 'userInfo.avatar.secure_url organizer').exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
@@ -115,6 +145,6 @@ eventSchema.statics.getOne = async function getOne(req) {
   }
 };
 
-const EventItem = mongoose.model<EventInter, EventFuncInter>('Event', eventSchema);
+const Event = mongoose.model<EventInter, EventFuncInter>('Event', eventSchema);
 
-export default EventItem;
+export default Event;

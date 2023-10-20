@@ -1,6 +1,6 @@
 import { Model, Document, ObjectId } from 'mongoose';
 import { Request } from 'express';
-import { CloudUrlType } from './sharedTypes';
+import { CloudUrlType, LocationType } from './sharedTypes';
 
 export type CategoryType = 'Sports' | 'Music' | 'Art' | 'Food';
 export interface EventInter extends Document {
@@ -10,7 +10,7 @@ export interface EventInter extends Document {
     category: CategoryType;
     startDate: string;
     endDate: string;
-    location: string;
+    location: LocationType;
     description: string;
   };
   cover: CloudUrlType[];
