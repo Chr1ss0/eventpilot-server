@@ -4,8 +4,7 @@ import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { getZipData } from '../utils/geoHelper';
-
-// import { deleteImage, uploadImage } from '../utils/imageService';
+import { deleteImage, uploadImage } from '../utils/imageService';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
@@ -124,34 +123,37 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
   }
 };
 
-userSchema.statics.edit = async function edit(_: Request) {
+userSchema.statics.edit = async function edit(req: Request) {
   try {
-    // const userId = tokenUserId(req);
-    // const user = await this.findById(userId);
-    // if (user && req.file) {
-    //   if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
-    //   const { public_id, secure_url } = await uploadImage(req.file.buffer);
-    //   const updateAvatar = {
-    //     userInfo: {
-    //       avatar: {
-    //         secure_url,
-    //         public_id,
-    //       },
-    //     },
-    //   };
-    // }
-    // // eslint-disable-next-line @typescript-eslint/naming-convention
-    // const { aboutMe, interest, firstName, lastName } = req.body;
-    // const updateUser = new this({
-    //   userInfo: {
-    //     firstName,
-    //     lastName,
-    //     aboutMe,
-    //     interest,
-    //   },
-    // });
-    // await this.findByIdAndUpdate(updateUser);
-    return 200;
+    const userId = tokenUserId(req);
+    const user = await this.findById(userId);
+    if (!user) return 500;
+    if (user && req.file) {
+      if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { public_id, secure_url } = await uploadImage(req.file.buffer);
+      console.log(secure_url);
+      const updateAvatar = {
+        $set: {
+          'userInfo.avatar.secure_url': secure_url,
+          'userInfo.avatar.public_id': public_id,
+        },
+      };
+      await this.findByIdAndUpdate(userId, updateAvatar);
+    }
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { aboutMe, interest: interestString, firstName, lastName } = req.body;
+    const interest = interestString.replaceAll(' ', '').split(',');
+    //
+    const updateUser = {
+      $set: {
+        'userInfo.firstName': firstName,
+        'userInfo.lastName': lastName,
+        'userInfo.aboutMe': aboutMe,
+        'userInfo.interest': interest,
+      },
+    };
+    return await this.findByIdAndUpdate(userId, updateUser, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
@@ -159,7 +161,7 @@ userSchema.statics.edit = async function edit(_: Request) {
   }
 };
 
-userSchema.statics.login = async function login(req: Request): Promise<UserInter | number> {
+userSchema.statics.login = async function login(req: Request) {
   const { email, password } = req.body;
   try {
     const user = await this.findOne({ email });
@@ -174,7 +176,7 @@ userSchema.statics.login = async function login(req: Request): Promise<UserInter
   }
 };
 
-userSchema.statics.bookmark = async function bookmark(req: Request): Promise<UserInter | number> {
+userSchema.statics.bookmark = async function bookmark(req: Request) {
   try {
     const userId = tokenUserId(req);
     const { event } = req.params;
@@ -184,10 +186,9 @@ userSchema.statics.bookmark = async function bookmark(req: Request): Promise<Use
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    if (user.bookmarks.includes(event)) await this.findByIdAndUpdate(userId, { $pull: { bookmarks: event } });
-    else await this.findByIdAndUpdate(userId, { $addToSet: { bookmarks: event } });
-
-    return (await this.findById(userId)) as UserInter;
+    if (user.bookmarks.includes(event))
+      return await this.findByIdAndUpdate(userId, { $pull: { bookmarks: event } }, { new: true });
+    return await this.findByIdAndUpdate(userId, { $addToSet: { bookmarks: event } }, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
@@ -229,8 +230,7 @@ userSchema.statics.postReview = async function postReview(req: Request) {
       content,
       rating,
     };
-    await this.findByIdAndUpdate(receiver, { $addToSet: { reviews } });
-    return await this.findById(receiver);
+    return await this.findByIdAndUpdate(receiver, { $addToSet: { reviews } }, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -242,8 +242,11 @@ userSchema.statics.editLocation = async function editLocation(req: Request) {
   try {
     const { defaultLocation } = req.body;
     const userId = tokenUserId(req);
-    await this.findByIdAndUpdate(userId, { $set: { 'userInfo.defaultLocation': defaultLocation } });
-    return await this.findById(userId);
+    return await this.findByIdAndUpdate(
+      userId,
+      { $set: { 'userInfo.defaultLocation': defaultLocation } },
+      { new: true },
+    );
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;

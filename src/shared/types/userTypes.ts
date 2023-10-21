@@ -37,5 +37,5 @@ export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   postReview(req: Request): Promise<T>;
   editLocation(req: Request): Promise<T>;
   follow(req: Request): Promise<T>;
-  editUser(req: Request): Promise<T>;
+  edit(req: Request): Promise<T>;
 }

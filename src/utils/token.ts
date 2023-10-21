@@ -23,8 +23,7 @@ export function verifyToken(token: string): JwtPayload {
 }
 
 export function deleteToken(res: Response) {
-  res.clearCookie('eventpilot');
-  res.sendStatus(200);
+  res.clearCookie('eventpilot').json({ message: 'Successfully Logout' });
 }
 
 export function createTokenAndRes(res: Response, id: string) {

@@ -11,6 +11,7 @@ import {
   logoutUser,
   getUserId,
 } from '../controller/userController';
+import updateUserSchema from '../validator/updateUserSchema';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -25,7 +26,7 @@ userRoutes.post('/review', addReview);
 userRoutes.post('/bookmark/:event', bookmarkEvent);
 userRoutes.post('/follow/:followingId', followUser);
 
-userRoutes.put('edit', upload.single('image'), editUser);
+userRoutes.put('/edit', upload.single('image'), updateUserSchema, editUser);
 
 userRoutes.patch('/location', patchUser);
 

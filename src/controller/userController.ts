@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { createTokenAndRes, deleteToken } from '../utils/token';
 import User from '../models/User';
-import { conflictError, forbiddenError, internalServerError } from '../utils/errorHandlers';
+import { conflictError, forbiddenError, internalServerError, notAcceptedError } from '../utils/errorHandlers';
+import validatorResult from '../validator/validatorResult';
 
 export async function registerUser(req: Request, res: Response) {
   const result = await User.register(req);
@@ -25,8 +26,16 @@ export async function loginUser(req: Request, res: Response) {
   createTokenAndRes(res, result._id);
   return res.status(200).json({ message: 'Login successfully' });
 }
-export async function editUser(_: Request, res: Response) {
-  res.end();
+export async function editUser(req: Request, res: Response) {
+  try {
+    validatorResult(req);
+    const result = await User.edit(req);
+    if (typeof result === 'number') throw new Error('Internal Server Error');
+    return res.status(200).json({ result });
+  } catch (error) {
+    if (error instanceof Error) return notAcceptedError(res, error.message);
+    return internalServerError(res);
+  }
 }
 
 export async function logoutUser(_: Request, res: Response) {
