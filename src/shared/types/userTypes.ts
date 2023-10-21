@@ -14,7 +14,7 @@ export interface UserInter extends Document {
     avatar: CloudUrlType;
   };
   reviews: {
-    firstName: string;
+    userId: ObjectId;
     content: string;
     rating: number;
     creationDate: string;

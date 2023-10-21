@@ -4,6 +4,7 @@ import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { getZipData } from '../utils/geoHelper';
+
 // import { deleteImage, uploadImage } from '../utils/imageService';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
@@ -59,8 +60,9 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   },
   reviews: [
     {
-      firstName: {
-        type: String,
+      postUser: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
       },
       content: {
         type: String,
@@ -207,7 +209,9 @@ userSchema.statics.data = async function data(req: Request) {
 userSchema.statics.dataId = async function dataId(req: Request) {
   const { userId } = req.params;
   try {
-    return await this.findById(userId);
+    return await this.findById(userId)
+      .populate('reviews.postUser', 'postUser.firstName postUser.avatar.secure_url')
+      .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -219,17 +223,13 @@ userSchema.statics.dataId = async function dataId(req: Request) {
 userSchema.statics.postReview = async function postReview(req: Request) {
   try {
     const { content, rating, receiver } = req.body;
-    const userId = tokenUserId(req);
-    const user = await this.findById(userId);
-
-    if (!user) return 500;
-    const { firstName } = user.userInfo;
-    const review = {
-      firstName,
+    const postUser = tokenUserId(req);
+    const reviews = {
+      postUser,
       content,
       rating,
     };
-    await this.findByIdAndUpdate(receiver, { $addToSet: { reviews: review } });
+    await this.findByIdAndUpdate(receiver, { $addToSet: { reviews } });
     return await this.findById(receiver);
   } catch (error: CustomErrType | unknown) {
     console.log(error);
@@ -253,10 +253,24 @@ userSchema.statics.editLocation = async function editLocation(req: Request) {
 
 userSchema.statics.follow = async function follow(req: Request) {
   try {
-    const { idFollowing } = req.params;
+    const { followingId } = req.params;
     const userId = tokenUserId(req);
-    await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': idFollowing } });
-    await this.findByIdAndUpdate(idFollowing, { $addToSet: { 'connections.followers': userId } });
+
+    const user = await this.findById(userId);
+    const userToFollow = await this.findById(followingId);
+
+    if (!user || !userToFollow) return 500;
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    if (user.connections.following.includes(followingId)) {
+      await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
+      await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
+    } else {
+      await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': followingId } });
+      await this.findByIdAndUpdate(followingId, { $addToSet: { 'connections.followers': userId } });
+    }
+
     return await this.findById(userId);
   } catch (error: CustomErrType | unknown) {
     console.log(error);

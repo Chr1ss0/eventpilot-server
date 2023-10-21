@@ -43,7 +43,7 @@ export async function getUser(req: Request, res: Response) {
   return res.status(200).json({ userInfo: result.userInfo, bookmarks: result.bookmarks, reviews: result.reviews });
 }
 export async function getUserId(req: Request, res: Response) {
-  const result = await User.data(req);
+  const result = await User.dataId(req);
   if (typeof result === 'number') return internalServerError(res);
   return res.status(200).json({ userInfo: result.userInfo, bookmarks: result.bookmarks, reviews: result.reviews });
 }
