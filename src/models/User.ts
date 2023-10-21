@@ -4,6 +4,7 @@ import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { getZipData } from '../utils/geoHelper';
+// import { deleteImage, uploadImage } from '../utils/imageService';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
@@ -96,22 +97,22 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
 });
 
 userSchema.statics.register = async function register(req: Request): Promise<UserInter | number> {
-  const { email, password, firstName, lastName, zipCode } = req.body;
-  const { placeName, state, latitude, longitude } = await getZipData(zipCode);
-  const user = new this({
-    email,
-    password,
-    userInfo: {
-      firstName,
-      lastName,
-      defaultLocation: {
-        placeName,
-        state,
-        coordinates: [latitude, longitude],
-      },
-    },
-  });
   try {
+    const { email, password, firstName, lastName, zipCode } = req.body;
+    const { placeName, state, latitude, longitude } = await getZipData(zipCode);
+    const user = new this({
+      email,
+      password,
+      userInfo: {
+        firstName,
+        lastName,
+        defaultLocation: {
+          placeName,
+          state,
+          coordinates: [latitude, longitude],
+        },
+      },
+    });
     await user.save();
     return user;
   } catch (error: CustomErrType | unknown) {
@@ -121,25 +122,34 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
   }
 };
 
-userSchema.statics.edit = async function edit(req: Request): Promise<UserInter | number> {
-  const { email, password, firstName, lastName, zipCode } = req.body;
-  const { placeName, state, latitude, longitude } = await getZipData(zipCode);
-  const user = new this({
-    email,
-    password,
-    userInfo: {
-      firstName,
-      lastName,
-      defaultLocation: {
-        placeName,
-        state,
-        coordinates: [latitude, longitude],
-      },
-    },
-  });
+userSchema.statics.edit = async function edit(_: Request) {
   try {
-    await user.save();
-    return user;
+    // const userId = tokenUserId(req);
+    // const user = await this.findById(userId);
+    // if (user && req.file) {
+    //   if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
+    //   const { public_id, secure_url } = await uploadImage(req.file.buffer);
+    //   const updateAvatar = {
+    //     userInfo: {
+    //       avatar: {
+    //         secure_url,
+    //         public_id,
+    //       },
+    //     },
+    //   };
+    // }
+    // // eslint-disable-next-line @typescript-eslint/naming-convention
+    // const { aboutMe, interest, firstName, lastName } = req.body;
+    // const updateUser = new this({
+    //   userInfo: {
+    //     firstName,
+    //     lastName,
+    //     aboutMe,
+    //     interest,
+    //   },
+    // });
+    // await this.findByIdAndUpdate(updateUser);
+    return 200;
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
@@ -205,6 +215,7 @@ userSchema.statics.dataId = async function dataId(req: Request) {
   }
 };
 
+// Avatar
 userSchema.statics.postReview = async function postReview(req: Request) {
   try {
     const { content, rating, receiver } = req.body;

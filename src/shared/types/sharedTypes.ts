@@ -8,6 +8,7 @@ export type CloudUrlType = {
 };
 export type LocationType = {
   placeName: string;
+  address?: string;
   state: string;
   coordinates: number[];
 };

@@ -15,6 +15,7 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
     title: {
       type: String,
       unique: true,
+      trim: true,
     },
     category: {
       type: String,
@@ -34,6 +35,11 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
         type: String,
         required: true,
       },
+      address: {
+        type: String,
+        required: true,
+        trim: true,
+      },
       state: {
         type: String,
         required: true,
@@ -47,6 +53,7 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
     description: {
       type: String,
       required: true,
+      trim: true,
     },
   },
   cover: {
@@ -71,12 +78,15 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
 
 eventSchema.statics.createNew = async function createNew(req: Request) {
   try {
-    const { title, category, startDate, endDate, zipCode, description } = req.body;
+    const { title, category, startDate, endDate, description, location } = req.body;
+    console.log(location);
+    const [zipCode, address] = location.split(',');
+    console.log(zipCode);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { secure_url, public_id } = await uploadImage(req.file.buffer);
-    const { placeName, state, latitude, longitude } = await getZipData(zipCode);
+    const { placeName, state, latitude, longitude } = await getZipData(zipCode.trim());
     const organizer = tokenUserId(req);
     const event = new this({
       organizer,
@@ -87,6 +97,7 @@ eventSchema.statics.createNew = async function createNew(req: Request) {
         endDate,
         location: {
           placeName,
+          address,
           state,
           coordinates: [latitude, longitude],
         },

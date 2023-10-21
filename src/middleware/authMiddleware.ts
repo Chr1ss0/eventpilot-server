@@ -9,6 +9,6 @@ export default function auth(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (error) {
     console.error(error);
-    notAcceptedError(res, 'Token ungültig.');
+    notAcceptedError(res, 'Token invalid.');
   }
 }
