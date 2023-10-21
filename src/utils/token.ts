@@ -1,7 +1,7 @@
 import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 
-export const cookieConfig = { httpOnly: true, secure: true, maxAge: 3600000 };
+export const cookieConfig = { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'strict' as const };
 export const tokenConfig = { expiresIn: '1h' };
 
 const { JWT_SECRET } = process.env;
