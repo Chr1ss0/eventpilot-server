@@ -12,7 +12,7 @@ interface ZipDataInter extends AxiosResponse {
   places: LocationDataType[];
 }
 
-async function getZipDataArray(zipCode: string) {
+async function getZipDataArray(zipCode: string): Promise<'No valid ZipCode' | LocationDataType[]> {
   const url = `https://api.zippopotam.us/de/${zipCode}`;
 
   try {
@@ -27,7 +27,7 @@ async function getZipDataArray(zipCode: string) {
 export async function getZipData(zipCode: string) {
   const setDefaultLocation = await getZipDataArray(zipCode);
   if (setDefaultLocation === 'No valid ZipCode') throw new Error('Get ZipCode Data failed.');
-  const { latitude, longitude, state, 'place name': placeName } = setDefaultLocation[0];
+  const { latitude, longitude, state, 'place name': placeName }: LocationDataType = setDefaultLocation[0];
   return {
     latitude,
     longitude,
