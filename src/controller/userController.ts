@@ -49,12 +49,16 @@ export async function validateUser(_: Request, res: Response) {
 export async function getUser(req: Request, res: Response) {
   const result = await User.data(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json({ userInfo: result.userInfo, bookmarks: result.bookmarks, reviews: result.reviews });
+  return res.status(200).json({
+    result,
+  });
 }
 export async function getUserId(req: Request, res: Response) {
   const result = await User.dataId(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json({ userInfo: result.userInfo, bookmarks: result.bookmarks, reviews: result.reviews });
+  return res.status(200).json({
+    result,
+  });
 }
 
 export async function addReview(req: Request, res: Response) {

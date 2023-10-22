@@ -199,7 +199,7 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
 userSchema.statics.data = async function data(req: Request) {
   try {
     const userId = tokenUserId(req);
-    return await this.findById(userId);
+    return await this.findById(userId, { password: false });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -210,7 +210,7 @@ userSchema.statics.data = async function data(req: Request) {
 userSchema.statics.dataId = async function dataId(req: Request) {
   const { userId } = req.params;
   try {
-    return await this.findById(userId)
+    return await this.findById(userId, { password: false, email: false })
       .populate('reviews.postUser', 'postUser.firstName postUser.avatar.secure_url')
       .exec();
   } catch (error: CustomErrType | unknown) {

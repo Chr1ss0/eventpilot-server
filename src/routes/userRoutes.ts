@@ -18,8 +18,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 const userRoutes = express.Router();
 
 userRoutes.get('/validate', validateUser);
-userRoutes.get('/all', getUser);
-userRoutes.get('/single/:postUser', getUserId);
+userRoutes.get('/data', getUser);
+userRoutes.get('/single/:userId', getUserId);
 userRoutes.get('/logout', logoutUser);
 
 userRoutes.post('/review', addReview);

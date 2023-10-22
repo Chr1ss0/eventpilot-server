@@ -4,7 +4,7 @@ import { CloudUrlType, LocationType } from './sharedTypes';
 
 export interface UserInter extends Document {
   email: string;
-  password: string;
+  password?: string;
   userInfo: {
     firstName: string;
     lastName: string;
