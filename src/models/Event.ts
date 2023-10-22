@@ -140,6 +140,15 @@ eventSchema.statics.getAll = async function getAll() {
     return 500;
   }
 };
+eventSchema.statics.getFiltered = async function getFiltered() {
+  try {
+    return await this.find().populate('registeredUser', 'userInfo.avatar.secure_url').lean().exec();
+  } catch (error: CustomErrType | unknown) {
+    console.log(error);
+    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
+    return 500;
+  }
+};
 
 eventSchema.statics.getOne = async function getOne(req) {
   const { event } = req.params;

@@ -25,4 +25,5 @@ export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
   regUser(req: Request): Promise<T>;
   getAll(): Promise<T>;
   getOne(req: Request): Promise<T>;
+  getFiltered(req: Request): Promise<T>;
 }
