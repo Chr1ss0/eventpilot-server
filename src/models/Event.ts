@@ -79,13 +79,14 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
 
 eventSchema.statics.createNew = async function createNew(req: Request) {
   try {
-    const { title, category, startDate, endDate, description, location } = req.body;
-    const [zipCode, address] = location.split(',');
+    const { title, category, startDate, endDate, description, latitude, longitude, placeName, state, address } =
+      req.body;
+    // const [zipCode, address] = location.split(',');
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { secure_url, public_id } = await uploadImage(req.file.buffer);
-    const { placeName, state, latitude, longitude } = await getZipData(zipCode.trim());
+    // const { placeName, state, latitude, longitude } = await getZipData(zipCode.trim());
     const organizer = tokenUserId(req);
     const event = new this({
       organizer,

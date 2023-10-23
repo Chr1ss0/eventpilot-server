@@ -40,7 +40,7 @@ const eventValidateSchema = [
     .isString()
     .withMessage('The category should be a string.')
     .isIn(['Sport', 'Music', 'Art', 'Food'])
-    .withMessage('The category must be one of Sports, Music, Art, Food.'),
+    .withMessage('The category must be one of Sport, Music, Art, Food.'),
 
   body('startDate').notEmpty().withMessage('The start date cannot be empty.'),
 
