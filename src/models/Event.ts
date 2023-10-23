@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
-import { EventFuncInter, EventInter } from '../shared/types/eventTypes';
-import { CustomErrType } from '../shared/types/sharedTypes';
+import { EventFilters, EventFuncInter, EventInter } from '../shared/types/eventTypes';
+import { CustomErrType, SearchLocation } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { getZipData } from '../utils/geoHelper';
 import { uploadImage } from '../utils/imageService';
+import { UserInter } from '../shared/types/userTypes';
 
 const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
   organizer: {
@@ -79,9 +80,7 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
 eventSchema.statics.createNew = async function createNew(req: Request) {
   try {
     const { title, category, startDate, endDate, description, location } = req.body;
-    console.log(location);
     const [zipCode, address] = location.split(',');
-    console.log(zipCode);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -140,9 +139,43 @@ eventSchema.statics.getAll = async function getAll() {
     return 500;
   }
 };
-eventSchema.statics.getFiltered = async function getFiltered() {
+
+eventSchema.statics.getFiltered = async function getFiltered(req) {
   try {
-    return await this.find().populate('registeredUser', 'userInfo.avatar.secure_url').lean().exec();
+    const filters: EventFilters = {};
+    const searchLocation: SearchLocation = {};
+    if (req.query.category) filters.category = req.query.category;
+    if (typeof req.query.location === 'boolean') {
+      const userId = tokenUserId(req);
+      const user: UserInter | null = await this.findById(userId);
+      if (!user) throw new Error('No User found');
+      searchLocation.type = 'Point';
+      searchLocation.coordinates = user.userInfo.defaultLocation.coordinates;
+    } else if (req.query.location) {
+      const locationData = await getZipData(req.query.search);
+      searchLocation.type = 'Point';
+      searchLocation.coordinates = [Number(locationData.longitude), Number(locationData.latitude)];
+    }
+    if (req.query.date) filters.date = req.query.date;
+    if (req.query.title) {
+      filters.title = new RegExp(req.query.title, 'i');
+    }
+
+    const query = this.find(filters);
+
+    if (searchLocation.coordinates && req.query.distance) {
+      query.where('location').near({
+        center: {
+          type: 'Point',
+          coordinates: searchLocation.coordinates,
+        },
+        maxDistance: req.query.distance,
+      });
+    }
+
+    console.log(filters);
+
+    return await query.exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;

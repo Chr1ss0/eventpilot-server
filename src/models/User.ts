@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
-import { getZipData } from '../utils/geoHelper';
+// import { getZipData } from '../utils/geoHelper';
 import { deleteImage, uploadImage } from '../utils/imageService';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
@@ -34,16 +34,13 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
     defaultLocation: {
       placeName: {
         type: String,
-        required: true,
       },
       state: {
         type: String,
-        required: true,
       },
       coordinates: {
         type: [Number],
         index: '2dsphere',
-        required: true,
       },
     },
     avatar: {
@@ -99,19 +96,14 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
 
 userSchema.statics.register = async function register(req: Request): Promise<UserInter | number> {
   try {
-    const { email, password, firstName, lastName, zipCode } = req.body;
-    const { placeName, state, latitude, longitude } = await getZipData(zipCode);
+    const { email, password, firstName, lastName } = req.body;
+    // const { placeName, state, latitude, longitude } = await getZipData(zipCode);
     const user = new this({
       email,
       password,
       userInfo: {
         firstName,
         lastName,
-        defaultLocation: {
-          placeName,
-          state,
-          coordinates: [latitude, longitude],
-        },
       },
     });
     await user.save();
@@ -220,7 +212,6 @@ userSchema.statics.dataId = async function dataId(req: Request) {
   }
 };
 
-// Avatar
 userSchema.statics.postReview = async function postReview(req: Request) {
   try {
     const { content, rating, receiver } = req.body;
@@ -240,13 +231,17 @@ userSchema.statics.postReview = async function postReview(req: Request) {
 
 userSchema.statics.editLocation = async function editLocation(req: Request) {
   try {
-    const { defaultLocation } = req.body;
+    const { placeName, state, latitude, longitude } = req.body;
+    if (!placeName || !state || !longitude || !latitude) throw new Error('Informations missing');
     const userId = tokenUserId(req);
-    return await this.findByIdAndUpdate(
-      userId,
-      { $set: { 'userInfo.defaultLocation': defaultLocation } },
-      { new: true },
-    );
+    const updateLocation = {
+      $set: {
+        'userInfo.defaultLocation.placeName': placeName,
+        'userInfo.defaultLocation.state': state,
+        'userInfo.defaultLocation.coordinates': [latitude, longitude],
+      },
+    };
+    return await this.findByIdAndUpdate(userId, updateLocation, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;

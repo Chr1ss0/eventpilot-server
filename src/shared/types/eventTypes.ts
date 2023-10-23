@@ -19,6 +19,14 @@ export interface EventInter extends Document {
   };
 }
 
+export type EventFilters = {
+  category?: string;
+  location?: string | boolean;
+  distance?: string;
+  date?: string;
+  title?: unknown | string;
+};
+
 type ResponseType = EventInter | number;
 export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
   createNew(req: Request): Promise<T>;

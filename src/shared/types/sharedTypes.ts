@@ -12,3 +12,8 @@ export type LocationType = {
   state: string;
   coordinates: number[];
 };
+
+export type SearchLocation = {
+  type?: string;
+  coordinates?: number[];
+};

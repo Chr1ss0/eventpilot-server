@@ -60,23 +60,23 @@ export async function getUserId(req: Request, res: Response) {
 export async function addReview(req: Request, res: Response) {
   const result = await User.postReview(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json({ reviews: result.reviews });
+  return res.status(200).json(result.reviews);
 }
 
 export async function bookmarkEvent(req: Request, res: Response) {
   const result = await User.bookmark(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json({ bookmarks: result.bookmarks });
+  return res.status(200).json(result.bookmarks);
 }
 
 export async function followUser(req: Request, res: Response) {
   const result = await User.follow(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json({ following: result.connections.following });
+  return res.status(200).json(result.connections.following);
 }
 
 export async function patchUser(req: Request, res: Response) {
   const result = await User.editLocation(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json({ location: result.userInfo });
+  return res.status(200).json(result.userInfo);
 }

@@ -40,6 +40,8 @@ export async function getOneEvent(req: Request, res: Response) {
   return res.status(200).json(result);
 }
 
-export async function getFilteredEvents(_: Request, res: Response) {
-  res.end('login');
+export async function getFilteredEvents(req: Request, res: Response) {
+  const result = await Event.getFiltered(req);
+  if (typeof result === 'number') return internalServerError(res);
+  return res.status(200).json(result);
 }
