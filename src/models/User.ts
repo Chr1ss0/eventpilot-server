@@ -262,7 +262,7 @@ userSchema.statics.follow = async function follow(req: Request) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
-    if (user.connections.following.includes(followingId) && !user._id) {
+    if (user.connections.following.includes(followingId) && user._id !== followingId) {
       await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
     } else {
