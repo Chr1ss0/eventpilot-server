@@ -46,7 +46,9 @@ const eventValidateSchema = [
 
   body('endDate').notEmpty().withMessage('The end date cannot be empty.'),
 
-  // body('location').isLength({ min: 10 }).withMessage('The ZipCode needs 5 characters'),
+  body('address').notEmpty().withMessage('You need to provide an address.'),
+
+  body('placeName').notEmpty().withMessage('You need to provide a place.'),
 
   body('description')
     .isString()

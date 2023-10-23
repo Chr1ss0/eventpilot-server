@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
       secure_url: {
         type: String,
         default:
-          'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2629&q=80',
+          'https://images.unsplash.com/photo-1582266255765-fa5cf1a1d501?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       public_id: {
         type: String,
@@ -261,7 +261,8 @@ userSchema.statics.follow = async function follow(req: Request) {
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    if (user.connections.following.includes(followingId)) {
+    // eslint-disable-next-line no-underscore-dangle
+    if (user.connections.following.includes(followingId) && !user._id) {
       await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
     } else {
