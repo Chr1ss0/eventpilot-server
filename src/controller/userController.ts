@@ -5,15 +5,22 @@ import { conflictError, forbiddenError, internalServerError, notAcceptedError } 
 import validatorResult from '../validator/validatorResult';
 
 export async function registerUser(req: Request, res: Response) {
-  const result = await User.register(req);
-  if (typeof result === 'number') {
-    if (result === 11000) return conflictError(res, 'Email is already in use.');
+  try {
+    validatorResult(req);
+    const result = await User.register(req);
+    if (typeof result === 'number') {
+      if (result === 11000) return conflictError(res, 'Email is already in use.');
+      return internalServerError(res);
+    }
+    // eslint-disable-next-line no-underscore-dangle
+    createTokenAndRes(res, result._id);
+    // eslint-disable-next-line no-underscore-dangle
+    return res.status(200).json({ message: `User: ${result._id}, successfully registered` });
+  } catch (error) {
+    console.log(error);
+    if (error instanceof Error) return notAcceptedError(res, error.message);
     return internalServerError(res);
   }
-  // eslint-disable-next-line no-underscore-dangle
-  createTokenAndRes(res, result._id);
-  // eslint-disable-next-line no-underscore-dangle
-  return res.status(200).json({ message: `User: ${result._id}, successfully registered` });
 }
 
 export async function loginUser(req: Request, res: Response) {

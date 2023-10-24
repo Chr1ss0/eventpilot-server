@@ -157,9 +157,7 @@ userSchema.statics.login = async function login(req: Request) {
   const { email, password } = req.body;
   try {
     const user = await this.findOne({ email });
-
     if (!user || password !== user.password) return 403;
-
     return user;
   } catch (error: CustomErrType | unknown) {
     console.log(error);
@@ -173,9 +171,7 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
     const userId = tokenUserId(req);
     const { event } = req.params;
     const user = await this.findById(userId);
-
     if (!user) return 500;
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     if (user.bookmarks.includes(event))
@@ -189,9 +185,9 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
 };
 
 userSchema.statics.data = async function data(req: Request) {
+  const userId = tokenUserId(req);
   try {
-    const userId = tokenUserId(req);
-    return await this.findById(userId, { password: false });
+    return await this.findById(userId, { password: false }).populate('createdEvents');
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -233,7 +229,6 @@ userSchema.statics.editLocation = async function editLocation(req: Request) {
   try {
     const { placeName, state, latitude, longitude } = req.body;
     if (!placeName || !state || !longitude || !latitude) throw new Error('Informations missing');
-    const userId = tokenUserId(req);
     const updateLocation = {
       $set: {
         'userInfo.defaultLocation.placeName': placeName,
@@ -241,7 +236,7 @@ userSchema.statics.editLocation = async function editLocation(req: Request) {
         'userInfo.defaultLocation.coordinates': [latitude, longitude],
       },
     };
-    return await this.findByIdAndUpdate(userId, updateLocation, { new: true });
+    return await this.findByIdAndUpdate(tokenUserId(req), updateLocation, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -262,10 +257,13 @@ userSchema.statics.follow = async function follow(req: Request) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
-    if (user.connections.following.includes(followingId) && user._id !== followingId) {
+    if (user.connections.following.includes(followingId) && !user._id) {
       await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
-    } else {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // eslint-disable-next-line no-underscore-dangle
+    } else if (!user.connections.following.includes(followingId) && !user._id) {
       await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $addToSet: { 'connections.followers': userId } });
     }
@@ -277,6 +275,15 @@ userSchema.statics.follow = async function follow(req: Request) {
     return 500;
   }
 };
+
+userSchema.virtual('createdEvents', {
+  ref: 'Event',
+  localField: '_id',
+  foreignField: 'organizer',
+});
+
+userSchema.set('toObject', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true });
 
 const User = mongoose.model<UserInter, UserFuncInter>('User', userSchema);
 

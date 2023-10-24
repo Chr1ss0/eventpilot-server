@@ -1,6 +1,7 @@
 import { Document, Model, ObjectId } from 'mongoose';
 import { Request } from 'express';
 import { CloudUrlType, LocationType } from './sharedTypes';
+import { EventInter } from './eventTypes';
 
 export interface UserInter extends Document {
   email: string;
@@ -24,6 +25,7 @@ export interface UserInter extends Document {
     following: ObjectId[];
     followers: ObjectId[];
   };
+  createdEvents?: EventInter[];
 }
 
 type ResponseType = UserInter | number;

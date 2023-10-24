@@ -1,11 +1,12 @@
-import mongoose from 'mongoose';
+import mongoose, { SortOrder } from 'mongoose';
 import { Request } from 'express';
 import { EventFilters, EventFuncInter, EventInter } from '../shared/types/eventTypes';
 import { CustomErrType, SearchLocation } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
-import { getZipData } from '../utils/geoHelper';
 import { uploadImage } from '../utils/imageService';
 import { UserInter } from '../shared/types/userTypes';
+import { getEndOfDay, getStartOfTomorrow } from '../utils/timeHelper';
+import User from './User';
 
 const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
   organizer: {
@@ -79,12 +80,10 @@ eventSchema.statics.createNew = async function createNew(req: Request) {
   try {
     const { title, category, startDate, endDate, description, latitude, longitude, placeName, state, address } =
       req.body;
-    // const [zipCode, address] = location.split(',');
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { secure_url, public_id } = await uploadImage(req.file.buffer);
-    // const { placeName, state, latitude, longitude } = await getZipData(zipCode.trim());
     const organizer = tokenUserId(req);
     const event = new this({
       organizer,
@@ -106,8 +105,7 @@ eventSchema.statics.createNew = async function createNew(req: Request) {
         public_id,
       },
     });
-    await event.save();
-    return event;
+    return await event.save();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
@@ -116,11 +114,9 @@ eventSchema.statics.createNew = async function createNew(req: Request) {
 };
 
 eventSchema.statics.regUser = async function regUser(req: Request) {
-  const userId = tokenUserId(req);
   const { event } = req.params;
-
   try {
-    await this.findByIdAndUpdate(event, { $addToSet: { registeredUser: userId } });
+    await this.findByIdAndUpdate(event, { $addToSet: { registeredUser: tokenUserId(req) } });
     return (await this.findById(event)) as EventInter;
   } catch (error: CustomErrType | unknown) {
     console.log(error);
@@ -131,7 +127,11 @@ eventSchema.statics.regUser = async function regUser(req: Request) {
 
 eventSchema.statics.getAll = async function getAll() {
   try {
-    return await this.find().populate('registeredUser', 'userInfo.avatar.secure_url').lean().exec();
+    return await this.find()
+      .populate('registeredUser', 'userInfo.avatar.secure_url')
+      .sort({ 'eventInfo.startDate': 1 })
+      .lean()
+      .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
@@ -141,39 +141,52 @@ eventSchema.statics.getAll = async function getAll() {
 
 eventSchema.statics.getFiltered = async function getFiltered(req) {
   try {
+    const { category, location, startDate, endDate, title, distance, latestFirst, latitude, longitude } = req.query;
     const filters: EventFilters = {};
     const searchLocation: SearchLocation = {};
-    if (req.query.category) filters.category = req.query.category;
-    if (typeof req.query.location === 'boolean') {
-      const userId = tokenUserId(req);
-      const user: UserInter | null = await this.findById(userId);
-      if (!user) throw new Error('No User found');
+
+    if (category) filters['eventInfo.category'] = category;
+
+    if (location === 'user') {
+      const user: UserInter | null = await User.findById(tokenUserId(req));
+      if (user && user.userInfo.defaultLocation.coordinates) {
+        searchLocation.type = 'Point';
+        searchLocation.coordinates = user.userInfo.defaultLocation.coordinates;
+      }
+    } else if (latitude && longitude) {
       searchLocation.type = 'Point';
-      searchLocation.coordinates = user.userInfo.defaultLocation.coordinates;
-    } else if (req.query.location) {
-      const locationData = await getZipData(req.query.search);
-      searchLocation.type = 'Point';
-      searchLocation.coordinates = [Number(locationData.longitude), Number(locationData.latitude)];
-    }
-    if (req.query.date) filters.date = req.query.date;
-    if (req.query.title) {
-      filters.title = new RegExp(req.query.title, 'i');
+      searchLocation.coordinates = [Number(latitude), Number(longitude)];
     }
 
-    const query = this.find(filters);
+    if (startDate && endDate) {
+      filters['eventInfo.startDate'] = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    } else if (startDate === 'today') {
+      filters['eventInfo.startDate'] = { $gte: new Date(), $lte: getEndOfDay(new Date().toISOString()) };
+    } else if (startDate === 'tomorrow') {
+      const tomorrow = getStartOfTomorrow();
+      filters['eventInfo.startDate'] = { $gte: tomorrow, $lte: getEndOfDay(tomorrow.toISOString()) };
+    } else if (startDate === 'available') {
+      filters['eventInfo.startDate'] = { $gte: new Date() };
+    }
 
-    if (searchLocation.coordinates && req.query.distance) {
-      query.where('location').near({
+    if (title) filters['eventInfo.title'] = new RegExp(title, 'i');
+
+    const sortFor: string | Record<string, SortOrder> = latestFirst ? { createdAt: -1 } : { 'eventInfo.startDate': 1 };
+    console.log(searchLocation);
+    const query = this.find(filters).sort(sortFor);
+
+    if (searchLocation.coordinates && distance) {
+      query.where('eventInfo.location.coordinates').near({
         center: {
           type: 'Point',
           coordinates: searchLocation.coordinates,
         },
-        maxDistance: req.query.distance,
+        maxDistance: Number(distance) * 1000,
       });
     }
 
-    console.log(filters);
-
+    if (Object.keys(filters).length === 0 && Object.keys(searchLocation).length === 0)
+      throw new Error('No filters selected');
     return await query.exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
