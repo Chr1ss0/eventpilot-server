@@ -1,5 +1,6 @@
 const corsOption = {
-  origin: 'http://localhost:5173',
+  // origin: ['https://eventpilot-dev.onrender.com', 'https://event-pilot.onrender.com'],
+  origin: true,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 };
