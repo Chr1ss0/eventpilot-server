@@ -187,7 +187,17 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
 userSchema.statics.data = async function data(req: Request) {
   const userId = tokenUserId(req);
   try {
-    return await this.findById(userId, { password: false }).populate('createdEvents');
+    const doc = await this.findById(userId, { password: false })
+      .populate('reviews.postUser', 'postUser.firstName postUser.avatar.secure_url')
+      .populate('createdEvents')
+      .populate('bookedEvents')
+      .populate({
+        path: 'bookmarks',
+        select: '-registeredUser',
+      })
+      .exec();
+
+    return doc;
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -258,13 +268,13 @@ userSchema.statics.follow = async function follow(req: Request) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
-    if (user.connections.following.includes(followingId) && !user._id) {
+    if (user.connections.following.includes(followingId) && followingId !== user._id) {
       await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // eslint-disable-next-line no-underscore-dangle
-    } else if (!user.connections.following.includes(followingId) && !user._id) {
+    } else if (!user.connections.following.includes(followingId) && followingId !== user._id) {
       await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $addToSet: { 'connections.followers': userId } });
     }
@@ -281,6 +291,12 @@ userSchema.virtual('createdEvents', {
   ref: 'Event',
   localField: '_id',
   foreignField: 'organizer',
+});
+
+userSchema.virtual('bookedEvents', {
+  ref: 'Event',
+  localField: '_id',
+  foreignField: 'registeredUser',
 });
 
 userSchema.set('toObject', { virtuals: true });

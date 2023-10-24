@@ -15,8 +15,8 @@ const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
   },
   eventInfo: {
     title: {
-      type: String,
       unique: true,
+      type: String,
       trim: true,
     },
     category: {
