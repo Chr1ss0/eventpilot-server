@@ -188,7 +188,7 @@ userSchema.statics.data = async function data(req: Request) {
   const userId = tokenUserId(req);
   try {
     const doc = await this.findById(userId, { password: false })
-      .populate('reviews.postUser', 'postUser.firstName postUser.avatar.secure_url')
+      .populate('reviews', 'postUser.firstName postUser.avatar.secure_url')
       .populate('createdEvents')
       .populate('bookedEvents')
       .populate({
