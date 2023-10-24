@@ -200,6 +200,7 @@ userSchema.statics.dataId = async function dataId(req: Request) {
   try {
     return await this.findById(userId, { password: false, email: false })
       .populate('reviews.postUser', 'postUser.firstName postUser.avatar.secure_url')
+      .populate('createdEvents')
       .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
