@@ -187,17 +187,17 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
 userSchema.statics.data = async function data(req: Request) {
   const userId = tokenUserId(req);
   try {
-    const doc = await this.findById(userId, { password: false })
+    return await this.findById(userId, { password: false })
       .populate('reviews.postUser', 'userInfo.firstName userInfo.avatar.secure_url')
-      .populate('createdEvents')
-      .populate('bookedEvents')
       .populate({
-        path: 'bookmarks',
+        path: 'createdEvents',
         select: '-registeredUser',
       })
+      .populate({
+        path: 'bookmarks',
+        select: ' -registeredUser -organizer',
+      })
       .exec();
-
-    return doc;
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -210,7 +210,14 @@ userSchema.statics.dataId = async function dataId(req: Request) {
   try {
     return await this.findById(userId, { password: false, email: false })
       .populate('reviews.postUser', 'userInfo.firstName userInfo.avatar.secure_url')
-      .populate('createdEvents')
+      .populate({
+        path: 'createdEvents',
+        select: '-registeredUser',
+      })
+      .populate({
+        path: 'bookedEvents',
+        select: 'eventInfo cover -registeredUser',
+      })
       .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
