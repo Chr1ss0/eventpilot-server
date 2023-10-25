@@ -136,6 +136,7 @@ eventSchema.statics.getAll = async function getAll(req: Request) {
   else sortObj['eventInfo.startDate'] = 'asc';
   try {
     return await this.find({ 'eventInfo.startDate': { $gte: new Date() } })
+      .limit(50)
       .populate('registeredUser', 'userInfo.avatar.secure_url')
       .sort(sortObj)
       .lean()
@@ -150,6 +151,7 @@ eventSchema.statics.getAll = async function getAll(req: Request) {
 eventSchema.statics.getFiltered = async function getFiltered(req) {
   try {
     const { category, location, startDate, endDate, title, distance, sort, latitude, longitude } = req.query;
+    console.log(req.query);
     const filterObj: FilterObjType = {};
     const geoFilterObj: GeoFilterObjType = {};
     const sortObj: SortObjType = {};
@@ -196,6 +198,8 @@ eventSchema.statics.getFiltered = async function getFiltered(req) {
         maxDistance: Number(distance) * 1000,
       });
     }
+
+    console.log(`FilerObj:`, filterObj, `geoObj;`, geoFilterObj);
 
     if (Object.keys(filterObj).length === 0 && Object.keys(geoFilterObj).length === 0)
       throw new Error('No filters selected');
