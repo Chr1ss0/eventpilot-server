@@ -3,7 +3,6 @@ import { Request } from 'express';
 import { UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
-// import { getZipData } from '../utils/geoHelper';
 import { deleteImage, uploadImage } from '../utils/imageService';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
@@ -134,7 +133,7 @@ userSchema.statics.edit = async function edit(req: Request) {
       await this.findByIdAndUpdate(userId, updateAvatar);
     }
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    const { aboutMe, interest: interestString, firstName, lastName } = req.body;
+    const { aboutMe, interest: interestString, firstName, lastName, placeName, state, latitude, longitude } = req.body;
     const interest = interestString.replaceAll(' ', '').split(',');
     //
     const updateUser = {
@@ -143,6 +142,9 @@ userSchema.statics.edit = async function edit(req: Request) {
         'userInfo.lastName': lastName,
         'userInfo.aboutMe': aboutMe,
         'userInfo.interest': interest,
+        'userInfo.defaultLocation.placeName': placeName,
+        'userInfo.defaultLocation.state': state,
+        'userInfo.defaultLocation.coordinates': [latitude, longitude],
       },
     };
     return await this.findByIdAndUpdate(userId, updateUser, { new: true });
@@ -192,10 +194,7 @@ userSchema.statics.data = async function data(req: Request) {
       .populate({
         path: 'createdEvents',
         select: '-registeredUser',
-      })
-      .populate({
-        path: 'bookmarks',
-        select: ' -registeredUser -organizer',
+        options: { sort: { startDate: 1 } },
       })
       .exec();
   } catch (error: CustomErrType | unknown) {
@@ -213,10 +212,7 @@ userSchema.statics.dataId = async function dataId(req: Request) {
       .populate({
         path: 'createdEvents',
         select: '-registeredUser',
-      })
-      .populate({
-        path: 'bookedEvents',
-        select: 'eventInfo cover -registeredUser',
+        options: { sort: { startDate: 1 } },
       })
       .exec();
   } catch (error: CustomErrType | unknown) {
@@ -243,25 +239,6 @@ userSchema.statics.postReview = async function postReview(req: Request) {
   }
 };
 
-userSchema.statics.editLocation = async function editLocation(req: Request) {
-  try {
-    const { placeName, state, latitude, longitude } = req.body;
-    if (!placeName || !state || !longitude || !latitude) throw new Error('Informations missing');
-    const updateLocation = {
-      $set: {
-        'userInfo.defaultLocation.placeName': placeName,
-        'userInfo.defaultLocation.state': state,
-        'userInfo.defaultLocation.coordinates': [latitude, longitude],
-      },
-    };
-    return await this.findByIdAndUpdate(tokenUserId(req), updateLocation, { new: true });
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
-    return 500;
-  }
-};
-
 userSchema.statics.follow = async function follow(req: Request) {
   try {
     const { followingId } = req.params;
@@ -271,7 +248,6 @@ userSchema.statics.follow = async function follow(req: Request) {
     const userToFollow = await this.findById(followingId);
 
     if (!user || !userToFollow) return 500;
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
@@ -290,6 +266,33 @@ userSchema.statics.follow = async function follow(req: Request) {
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
+    return 500;
+  }
+};
+
+userSchema.statics.wishList = async function wishList(req: Request) {
+  try {
+    return await this.findById(tokenUserId(req))
+      .select('-userInfo -password -email -connections -reviews')
+      .populate({
+        path: 'bookmarks',
+        select: ' -registeredUser -organizer',
+        match: {
+          'eventInfo.startDate': { $gte: new Date() },
+        },
+        options: { sort: { startDate: 1 } },
+      })
+      .populate({
+        path: 'bookedEvents',
+        select: 'eventInfo cover -registeredUser',
+        match: {
+          'eventInfo.startDate': { $gte: new Date() },
+        },
+        options: { sort: { startDate: 1 } },
+      })
+      .exec();
+  } catch (error) {
+    console.log(error);
     return 500;
   }
 };

@@ -13,7 +13,11 @@ export type LocationType = {
   coordinates: number[];
 };
 
-export type SearchLocation = {
+export type GeoFilterObjType = {
   type?: string;
   coordinates?: string[] | number[];
+};
+
+export type SortObjType = {
+  [key: string]: 'asc' | 'desc';
 };

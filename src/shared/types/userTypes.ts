@@ -37,7 +37,7 @@ export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   data(req: Request): Promise<T>;
   dataId(req: Request): Promise<T>;
   postReview(req: Request): Promise<T>;
-  editLocation(req: Request): Promise<T>;
   follow(req: Request): Promise<T>;
   edit(req: Request): Promise<T>;
+  wishList(req: Request): Promise<T>;
 }

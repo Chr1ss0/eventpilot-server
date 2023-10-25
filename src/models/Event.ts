@@ -1,7 +1,7 @@
-import mongoose, { SortOrder } from 'mongoose';
+import mongoose from 'mongoose';
 import { Request } from 'express';
-import { EventFilters, EventFuncInter, EventInter } from '../shared/types/eventTypes';
-import { CustomErrType, SearchLocation } from '../shared/types/sharedTypes';
+import { FilterObjType, EventFuncInter, EventInter } from '../shared/types/eventTypes';
+import { CustomErrType, GeoFilterObjType, SortObjType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { uploadImage } from '../utils/imageService';
 import { UserInter } from '../shared/types/userTypes';
@@ -125,11 +125,19 @@ eventSchema.statics.regUser = async function regUser(req: Request) {
   }
 };
 
-eventSchema.statics.getAll = async function getAll() {
+eventSchema.statics.getAll = async function getAll(req: Request) {
+  const { sort } = req.query;
+  console.log(sort);
+  const sortObj: SortObjType = {};
+  // eslint-disable-next-line no-underscore-dangle
+  if (sort === 'createdfirst') sortObj._id = 'asc';
+  // eslint-disable-next-line no-underscore-dangle
+  else if (sort === 'createdlast') sortObj._id = 'desc';
+  else sortObj['eventInfo.startDate'] = 'asc';
   try {
-    return await this.find()
+    return await this.find({ 'eventInfo.startDate': { $gte: new Date() } })
       .populate('registeredUser', 'userInfo.avatar.secure_url')
-      .sort({ 'eventInfo.startDate': 1 })
+      .sort(sortObj)
       .lean()
       .exec();
   } catch (error: CustomErrType | unknown) {
@@ -141,51 +149,55 @@ eventSchema.statics.getAll = async function getAll() {
 
 eventSchema.statics.getFiltered = async function getFiltered(req) {
   try {
-    const { category, location, startDate, endDate, title, distance, latestFirst, latitude, longitude } = req.query;
-    const filters: EventFilters = {};
-    const searchLocation: SearchLocation = {};
+    const { category, location, startDate, endDate, title, distance, sort, latitude, longitude } = req.query;
+    const filterObj: FilterObjType = {};
+    const geoFilterObj: GeoFilterObjType = {};
+    const sortObj: SortObjType = {};
+    // eslint-disable-next-line no-underscore-dangle
+    if (sort === 'createdfirst') sortObj._id = 'asc';
+    // eslint-disable-next-line no-underscore-dangle
+    else if (sort === 'createdlast') sortObj._id = 'desc';
+    else sortObj['eventInfo.startDate'] = 'asc';
 
-    if (category) filters['eventInfo.category'] = category;
+    if (category) filterObj['eventInfo.category'] = category;
 
     if (location === 'user') {
       const user: UserInter | null = await User.findById(tokenUserId(req));
       if (user && user.userInfo.defaultLocation.coordinates) {
-        searchLocation.type = 'Point';
-        searchLocation.coordinates = user.userInfo.defaultLocation.coordinates;
+        geoFilterObj.type = 'Point';
+        geoFilterObj.coordinates = user.userInfo.defaultLocation.coordinates;
       }
     } else if (latitude && longitude) {
-      searchLocation.type = 'Point';
-      searchLocation.coordinates = [Number(latitude), Number(longitude)];
+      geoFilterObj.type = 'Point';
+      geoFilterObj.coordinates = [Number(latitude), Number(longitude)];
     }
 
     if (startDate && endDate) {
-      filters['eventInfo.startDate'] = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      filterObj['eventInfo.startDate'] = { $gte: new Date(startDate), $lte: new Date(endDate) };
     } else if (startDate === 'today') {
-      filters['eventInfo.startDate'] = { $gte: new Date(), $lte: getEndOfDay(new Date().toISOString()) };
+      filterObj['eventInfo.startDate'] = { $gte: new Date(), $lte: getEndOfDay(new Date().toISOString()) };
     } else if (startDate === 'tomorrow') {
       const tomorrow = getStartOfTomorrow();
-      filters['eventInfo.startDate'] = { $gte: tomorrow, $lte: getEndOfDay(tomorrow.toISOString()) };
+      filterObj['eventInfo.startDate'] = { $gte: tomorrow, $lte: getEndOfDay(tomorrow.toISOString()) };
     } else if (startDate === 'available') {
-      filters['eventInfo.startDate'] = { $gte: new Date() };
+      filterObj['eventInfo.startDate'] = { $gte: new Date() };
     }
 
-    if (title) filters['eventInfo.title'] = new RegExp(title, 'i');
+    if (title) filterObj['eventInfo.title'] = new RegExp(title, 'i');
 
-    const sortFor: string | Record<string, SortOrder> = latestFirst ? { createdAt: -1 } : { 'eventInfo.startDate': 1 };
-    console.log(searchLocation);
-    const query = this.find(filters).sort(sortFor);
+    const query = this.find(filterObj).sort(sortObj);
 
-    if (searchLocation.coordinates && distance) {
+    if (geoFilterObj.coordinates && distance) {
       query.where('eventInfo.location.coordinates').near({
         center: {
           type: 'Point',
-          coordinates: searchLocation.coordinates,
+          coordinates: geoFilterObj.coordinates,
         },
         maxDistance: Number(distance) * 1000,
       });
     }
 
-    if (Object.keys(filters).length === 0 && Object.keys(searchLocation).length === 0)
+    if (Object.keys(filterObj).length === 0 && Object.keys(geoFilterObj).length === 0)
       throw new Error('No filters selected');
     return await query.exec();
   } catch (error: CustomErrType | unknown) {

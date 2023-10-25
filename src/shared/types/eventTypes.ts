@@ -17,7 +17,7 @@ export interface EventInter extends Document {
   registeredUser: ObjectId[];
 }
 
-export type EventFilters = {
+export type FilterObjType = {
   'eventInfo.category'?: string;
   'eventInfo.location.coordinates'?: string;
   distance?: string;
@@ -29,7 +29,7 @@ type ResponseType = EventInter | number;
 export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
   createNew(req: Request): Promise<T>;
   regUser(req: Request): Promise<T>;
-  getAll(): Promise<T>;
+  getAll(req: Request): Promise<T>;
   getOne(req: Request): Promise<T>;
   getFiltered(req: Request): Promise<T>;
 }

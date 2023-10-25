@@ -82,8 +82,8 @@ export async function followUser(req: Request, res: Response) {
   return res.status(200).json(result.connections.following);
 }
 
-export async function patchUser(req: Request, res: Response) {
-  const result = await User.editLocation(req);
+export async function getWatchList(req: Request, res: Response) {
+  const result = await User.wishList(req);
   if (typeof result === 'number') return internalServerError(res);
-  return res.status(200).json(result.userInfo);
+  return res.status(200).json(result);
 }

@@ -28,8 +28,8 @@ export async function registerUserToEvent(req: Request, res: Response) {
   return res.status(200).json({ message: `Event: ${result._id}, successfully updated` });
 }
 
-export async function getAllEvents(_: Request, res: Response) {
-  const result = await Event.getAll();
+export async function getAllEvents(req: Request, res: Response) {
+  const result = await Event.getAll(req);
   if (typeof result === 'number') return internalServerError(res);
   return res.status(200).json(result);
 }
