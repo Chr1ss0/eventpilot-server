@@ -117,7 +117,7 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
 userSchema.statics.edit = async function edit(req: Request) {
   try {
     const userId = tokenUserId(req);
-    const user = await this.findById(userId);
+    const user = await this.findById(userId, { password: false, email: false });
     if (!user) return 500;
     if (user && req.file) {
       if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
@@ -247,17 +247,17 @@ userSchema.statics.follow = async function follow(req: Request) {
     const user = await this.findById(userId);
     const userToFollow = await this.findById(followingId);
 
-    if (!user || !userToFollow) return 500;
+    if (!user || !userToFollow || followingId === userId) return 500;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
-    if (user.connections.following.includes(followingId) && followingId !== user._id) {
+    if (user.connections.following.includes(followingId)) {
       await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // eslint-disable-next-line no-underscore-dangle
-    } else if (!user.connections.following.includes(followingId) && followingId !== user._id) {
+    } else if (!user.connections.following.includes(followingId)) {
       await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $addToSet: { 'connections.followers': userId } });
     }
