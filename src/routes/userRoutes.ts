@@ -23,7 +23,7 @@ userRoutes.get('/single/:userId', getUserId);
 userRoutes.get('/logout', logoutUser);
 userRoutes.get('/watchList', getWatchList);
 
-userRoutes.post('/review', addReview);
+userRoutes.post('/review', upload.none(), addReview);
 userRoutes.post('/bookmark/:event', bookmarkEvent);
 userRoutes.post('/follow/:followingId', followUser);
 
