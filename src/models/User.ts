@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
 import { UpdateUserObjType, UserFuncInter, UserInter } from '../shared/types/userTypes';
-import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { deleteImage, uploadImage } from '../utils/imageService';
+import { unknownErrorMessage } from '../utils/errorHandlers';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
       secure_url: {
         type: String,
         default:
-          'https://images.unsplash.com/photo-1582266255765-fa5cf1a1d501?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+          'https://images.unsplash.com/photo-1519575706483-221027bfbb31?auto=format&fit=crop&q=80&w=3871&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       public_id: {
         type: String,
@@ -93,7 +93,7 @@ const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   },
 });
 
-userSchema.statics.register = async function register(req: Request): Promise<UserInter | number> {
+userSchema.statics.register = async function register(req: Request) {
   try {
     const { email, password, firstName, lastName } = req.body;
     // const { placeName, state, latitude, longitude } = await getZipData(zipCode);
@@ -105,12 +105,10 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
         lastName,
       },
     });
-    await user.save();
-    return user;
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
-    return 500;
+    return await user.save();
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -120,7 +118,7 @@ userSchema.statics.edit = async function edit(req: Request) {
 
     if (req.file) {
       const user = await this.findById(tokenUserId(req), { password: false, email: false });
-      if (!user) return 500;
+      if (!user) throw new Error('No User found.');
       if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const { public_id, secure_url } = await uploadImage(req.file.buffer);
@@ -143,23 +141,22 @@ userSchema.statics.edit = async function edit(req: Request) {
     userUpdateObj['userInfo.interest'] = interestArray;
 
     return await this.findByIdAndUpdate(tokenUserId(req), { $set: userUpdateObj }, { new: true });
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
 userSchema.statics.login = async function login(req: Request) {
   const { email, password } = req.body;
   try {
+    if (!email || !password) throw new Error('No Email or Passwort on request.');
     const user = await this.findOne({ email });
-    if (!user || password !== user.password) return 403;
+    if (!user || password !== user.password) throw new Error('Invalid Login data.');
     return user;
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -168,16 +165,15 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
     const userId = tokenUserId(req);
     const { event } = req.params;
     const user = await this.findById(userId);
-    if (!user) return 500;
+    if (!user) throw new Error('No User found.');
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     if (user.bookmarks.includes(event))
       return await this.findByIdAndUpdate(userId, { $pull: { bookmarks: event } }, { new: true });
     return await this.findByIdAndUpdate(userId, { $addToSet: { bookmarks: event } }, { new: true });
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -192,10 +188,9 @@ userSchema.statics.data = async function data(req: Request) {
         options: { sort: { startDate: 1 } },
       })
       .exec();
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -210,10 +205,9 @@ userSchema.statics.dataId = async function dataId(req: Request) {
         options: { sort: { startDate: 1 } },
       })
       .exec();
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -227,10 +221,9 @@ userSchema.statics.postReview = async function postReview(req: Request) {
       rating,
     };
     return await this.findByIdAndUpdate(receiver, { $addToSet: { reviews } }, { new: true });
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -258,10 +251,9 @@ userSchema.statics.follow = async function follow(req: Request) {
     }
 
     return await this.findById(userId);
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -287,8 +279,8 @@ userSchema.statics.wishList = async function wishList(req: Request) {
       })
       .exec();
   } catch (error) {
-    console.log(error);
-    return 500;
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 

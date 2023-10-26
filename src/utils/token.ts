@@ -22,10 +22,6 @@ export function verifyToken(token: string): JwtPayload {
   }
 }
 
-export function deleteToken(res: Response) {
-  res.clearCookie('eventpilot').json({ message: 'Successfully Logout' });
-}
-
 export function createTokenAndRes(res: Response, id: string) {
   const token = createToken({ user: id });
   res.cookie('eventpilot', token, cookieConfig);

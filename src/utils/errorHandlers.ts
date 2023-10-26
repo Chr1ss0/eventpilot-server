@@ -1,5 +1,6 @@
 import { Response } from 'express';
 
+export const unknownErrorMessage = 'An unknown Error occurred';
 export function errorFunction(res: Response, status: number, message: string) {
   res.status(status).json({ message: `${message}` });
 }

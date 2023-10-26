@@ -7,21 +7,20 @@
 ![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
 ![Express](https://img.shields.io/badge/Mongoose-000000?style=for-the-badge&logo=mongoose&logoColor=white)
 
-## Team Members:
+### Team Members:
+[Matthias](https://github.com/Matthew7991)
+[Jacub](https://github.com/FutureOneX)
+[Daniel](https://github.com/DanielKirchenbauer)
 
 ## Table of Contents
 
 - [The Idea](#the-idea-)
 - [Features](#features-)
 - [Related](#related-)
-  - [Frontend](#frontend-)
-  - [Crafting process](#crafting-prozess-)
-  - [Instagram](#instagram-)
-- [Work in Progress](#work-in-progress-)
-  - [Next Version](#next-version)
-- [Changelog](#changelog-)
+  - [Frontend](#Frontend of EventPilot-)
 
-## The MVP 💡
+
+## Description 💡
 
 I was always fascinated by tech-related stuff that was fancy, flashy, and maybe even functional.
 So I got myself a Raspberry Pi, joined a coding bootcamp, and combined all of that with my love of craftsmanship.
@@ -31,38 +30,26 @@ The program should have some kind of smart home dashboard, and from there, acces
 a bunch of apps; later, it should also have a database and a connection to a webapp.
 But for now, let's just start... 🏁
 
-## User Storys 🌟
-
-_Planned for now:_
-
-- **Old-vintage** body combined with some **cyberpunk** interface.
-- Display current **weather** and indoor values
-- Play **Musik**
-- **Alarm** Clock
-
 ## Related 🖇️
 
 _Some sources and bonuses content-related and required for the full project._
 
-### Frontend 👾
+### Frontend of EventPilot 👾
 
-[Follow the white Rabbit 🐇](https://github.com/Chr1ss0/ordinary_frontend)
+[GitHub-Repo Frontend](https://github.com/Chr1ss0/eventpilot-frontend)
 
 _a gitHub Repo for the Backend of the Project._
 
-### Miro
+### Little Programm to fake Users and Events
 
-[Planing is everything! 🩹](https://github.com/Chr1ss0/ordinary_crafting)
+[GitHub-Repo FakeData](https://github.com/Chr1ss0/eventpilot-fakeHelper)
 
 _A gitHub Repo for the electronic/craft part of the Project._
 
+## Routes
 
-
-#### Next Version
-
-`v2.0.0 - ...`
-
-- Add a temp sensor and record them.
-- Save measurements in a JSON.
-- Int Weather API
+### Encrypt-Routes
+### User-Routes
+### Event-Routes
+### Utility-Routes
 
