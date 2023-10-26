@@ -15,8 +15,8 @@ export async function createEvent(req: Request, res: Response) {
     // eslint-disable-next-line no-underscore-dangle
     return res.status(200).json({ _id: result._id });
   } catch (error) {
-    if (error instanceof Error) return notAcceptedError(res, error.message);
     if (typeof error === 'string') return notAcceptedError(res, error);
+    if (error instanceof Error) return notAcceptedError(res, error.message);
     return internalServerError(res);
   }
 }

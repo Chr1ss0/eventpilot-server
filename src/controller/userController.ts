@@ -18,6 +18,7 @@ export async function registerUser(req: Request, res: Response) {
     return res.status(200).json({ message: `User: ${result.email}, successfully registered` });
   } catch (error) {
     if (typeof error === 'string') return notAcceptedError(res, error);
+    if (error instanceof Error) return notAcceptedError(res, error.message);
     return internalServerError(res);
   }
 }
