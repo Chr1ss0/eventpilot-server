@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
 import { FilterObjType, EventFuncInter, EventInter } from '../shared/types/eventTypes';
-import { CustomErrType, GeoFilterObjType, SortObjType } from '../shared/types/sharedTypes';
+import { GeoFilterObjType, SortObjType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { uploadImage } from '../utils/imageService';
 import { UserInter } from '../shared/types/userTypes';
 import { getEndOfDay, getStartOfTomorrow } from '../utils/timeHelper';
 import User from './User';
+import { unknownErrorMessage } from '../utils/errorHandlers';
 
 const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
   organizer: {
@@ -106,10 +107,9 @@ eventSchema.statics.createNew = async function createNew(req: Request) {
       },
     });
     return await event.save();
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -118,16 +118,14 @@ eventSchema.statics.regUser = async function regUser(req: Request) {
   try {
     await this.findByIdAndUpdate(event, { $addToSet: { registeredUser: tokenUserId(req) } });
     return (await this.findById(event)) as EventInter;
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
 eventSchema.statics.getAll = async function getAll(req: Request) {
   const { sort } = req.query;
-  console.log(sort);
   const sortObj: SortObjType = {};
   // eslint-disable-next-line no-underscore-dangle
   if (sort === 'createdfirst') sortObj._id = 'asc';
@@ -141,10 +139,9 @@ eventSchema.statics.getAll = async function getAll(req: Request) {
       .sort(sortObj)
       .lean()
       .exec();
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -201,10 +198,9 @@ eventSchema.statics.getFiltered = async function getFiltered(req) {
     if (Object.keys(filterObj).length === 0 && Object.keys(geoFilterObj).length === 0)
       throw new Error('No filters selected');
     return await query.exec();
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 
@@ -215,10 +211,9 @@ eventSchema.statics.getOne = async function getOne(req) {
       .populate('registeredUser', 'userInfo.avatar.secure_url organizer')
       .populate('organizer', 'userInfo.firstName userInfo.lastName userInfo.avatar.secure_url')
       .exec();
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number;
-    return 500;
+  } catch (error) {
+    if (error instanceof Error) return error.message;
+    return unknownErrorMessage;
   }
 };
 

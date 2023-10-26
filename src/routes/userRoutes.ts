@@ -12,6 +12,7 @@ import {
   getWatchList,
 } from '../controller/userController';
 import updateUserSchema from '../validator/updateUserSchema';
+import reviewSchema from '../validator/reviewSchema';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -23,7 +24,7 @@ userRoutes.get('/single/:userId', getUserId);
 userRoutes.get('/logout', logoutUser);
 userRoutes.get('/watchList', getWatchList);
 
-userRoutes.post('/review', upload.none(), addReview);
+userRoutes.post('/review', upload.none(), reviewSchema, addReview);
 userRoutes.post('/bookmark/:event', bookmarkEvent);
 userRoutes.post('/follow/:followingId', followUser);
 

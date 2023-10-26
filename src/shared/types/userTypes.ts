@@ -2,6 +2,7 @@ import { Document, Model, ObjectId } from 'mongoose';
 import { Request } from 'express';
 import { CloudUrlType, LocationType } from './sharedTypes';
 import { EventInter } from './eventTypes';
+import { MongoError } from 'mongodb';
 
 export interface UserInter extends Document {
   email: string;
@@ -40,7 +41,7 @@ export type UpdateUserObjType = {
   'userInfo.interest'?: string[];
 };
 
-type ResponseType = UserInter | number;
+type ResponseType = UserInter | Error | MongoError | string;
 
 export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   register(req: Request): Promise<T>;
