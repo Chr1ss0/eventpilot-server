@@ -28,6 +28,18 @@ export interface UserInter extends Document {
   createdEvents?: EventInter[];
 }
 
+export type UpdateUserObjType = {
+  'userInfo.avatar.secure_url'?: string;
+  'userInfo.avatar.public_id'?: string;
+  'userInfo.defaultLocation.placeName'?: string;
+  'userInfo.defaultLocation.state'?: string;
+  'userInfo.defaultLocation.coordinates'?: [number, number];
+  'userInfo.firstName'?: string;
+  'userInfo.lastName'?: string;
+  'userInfo.aboutMe'?: string;
+  'userInfo.interest'?: string[];
+};
+
 type ResponseType = UserInter | number;
 
 export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {

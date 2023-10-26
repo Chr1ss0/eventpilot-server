@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
-import { UserFuncInter, UserInter } from '../shared/types/userTypes';
+import { UpdateUserObjType, UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
 import { deleteImage, uploadImage } from '../utils/imageService';
@@ -116,38 +116,33 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
 
 userSchema.statics.edit = async function edit(req: Request) {
   try {
-    const userId = tokenUserId(req);
-    const user = await this.findById(userId, { password: false, email: false });
-    if (!user) return 500;
-    if (user && req.file) {
+    const userUpdateObj: UpdateUserObjType = {};
+
+    if (req.file) {
+      const user = await this.findById(tokenUserId(req), { password: false, email: false });
+      if (!user) return 500;
       if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const { public_id, secure_url } = await uploadImage(req.file.buffer);
-      console.log(secure_url);
-      const updateAvatar = {
-        $set: {
-          'userInfo.avatar.secure_url': secure_url,
-          'userInfo.avatar.public_id': public_id,
-        },
-      };
-      await this.findByIdAndUpdate(userId, updateAvatar);
+      userUpdateObj['userInfo.avatar.secure_url'] = secure_url;
+      userUpdateObj['userInfo.avatar.public_id'] = public_id;
     }
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const { aboutMe, interest: interestString, firstName, lastName, placeName, state, latitude, longitude } = req.body;
-    const interest = interestString.replaceAll(' ', '').split(',');
-    //
-    const updateUser = {
-      $set: {
-        'userInfo.firstName': firstName,
-        'userInfo.lastName': lastName,
-        'userInfo.aboutMe': aboutMe,
-        'userInfo.interest': interest,
-        'userInfo.defaultLocation.placeName': placeName,
-        'userInfo.defaultLocation.state': state,
-        'userInfo.defaultLocation.coordinates': [latitude, longitude],
-      },
-    };
-    return await this.findByIdAndUpdate(userId, updateUser, { new: true });
+    const { aboutMe, interest, firstName, lastName, placeName, state, latitude, longitude } = req.body;
+
+    if (latitude && longitude && placeName && state) {
+      userUpdateObj['userInfo.defaultLocation.placeName'] = placeName;
+      userUpdateObj['userInfo.defaultLocation.state'] = state;
+      userUpdateObj['userInfo.defaultLocation.coordinates'] = [latitude, longitude];
+    }
+
+    const interestArray = interest.replaceAll(' ', '').split(',');
+
+    userUpdateObj['userInfo.firstName'] = firstName;
+    userUpdateObj['userInfo.lastName'] = lastName;
+    userUpdateObj['userInfo.aboutMe'] = aboutMe;
+    userUpdateObj['userInfo.interest'] = interestArray;
+
+    return await this.findByIdAndUpdate(tokenUserId(req), { $set: userUpdateObj }, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
