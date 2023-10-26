@@ -1,6 +1,5 @@
 import { Model, Document, ObjectId } from 'mongoose';
 import { Request } from 'express';
-import { MongoError } from 'mongodb';
 import { CloudUrlType, LocationType } from './sharedTypes';
 
 export type CategoryType = 'Sports' | 'Music' | 'Art' | 'Food';
@@ -26,8 +25,8 @@ export type FilterObjType = {
   'eventInfo.title'?: unknown | string;
 };
 
-type ResponseType = EventInter | Error | MongoError | string;
-export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
+export type ResponseEventType = EventInter | Error | string | number;
+export interface EventFuncInter<T = ResponseEventType> extends Model<EventInter> {
   createNew(req: Request): Promise<T>;
   regUser(req: Request): Promise<T>;
   getAll(req: Request): Promise<T>;

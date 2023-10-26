@@ -15,7 +15,7 @@ const eventRoutes = express.Router();
 
 eventRoutes.get('/all', getAllEvents);
 eventRoutes.get('/single/:event', getOneEvent);
-eventRoutes.get('/filtered', getFilteredEvents); // Search in Params, Filter in Querries
+eventRoutes.get('/filtered', getFilteredEvents);
 
 eventRoutes.post('/create', upload.single('image'), eventValidateSchema, createEvent);
 eventRoutes.post('/register/:event', registerUserToEvent);

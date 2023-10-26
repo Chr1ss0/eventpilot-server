@@ -8,7 +8,6 @@ export default function auth(req: Request, res: Response, next: NextFunction) {
     verifyToken(eventpilot);
     next();
   } catch (error) {
-    console.error(error);
     notAcceptedError(res, 'Token invalid.');
   }
 }
