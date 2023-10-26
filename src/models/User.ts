@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { UpdateUserObjType, UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { tokenUserId } from '../utils/token';
 import { deleteImage, uploadImage } from '../utils/imageService';
-import { unknownErrorMessage } from '../utils/errorHandlers';
+import { errorHandlerModel } from '../utils/errorHandlers';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
   email: {
@@ -107,8 +107,7 @@ userSchema.statics.register = async function register(req: Request) {
     });
     return await user.save();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -142,21 +141,19 @@ userSchema.statics.edit = async function edit(req: Request) {
 
     return await this.findByIdAndUpdate(tokenUserId(req), { $set: userUpdateObj }, { new: true });
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
 userSchema.statics.login = async function login(req: Request) {
   const { email, password } = req.body;
   try {
-    if (!email || !password) throw new Error('No Email or Passwort on request.');
+    if (!email) throw new Error('No Email on request.');
     const user = await this.findOne({ email });
     if (!user || password !== user.password) throw new Error('Invalid Login data.');
     return user;
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -172,8 +169,7 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
       return await this.findByIdAndUpdate(userId, { $pull: { bookmarks: event } }, { new: true });
     return await this.findByIdAndUpdate(userId, { $addToSet: { bookmarks: event } }, { new: true });
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -189,8 +185,7 @@ userSchema.statics.data = async function data(req: Request) {
       })
       .exec();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -206,8 +201,7 @@ userSchema.statics.dataId = async function dataId(req: Request) {
       })
       .exec();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -222,8 +216,7 @@ userSchema.statics.postReview = async function postReview(req: Request) {
     };
     return await this.findByIdAndUpdate(receiver, { $addToSet: { reviews } }, { new: true });
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -252,8 +245,7 @@ userSchema.statics.follow = async function follow(req: Request) {
 
     return await this.findById(userId);
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -279,8 +271,7 @@ userSchema.statics.wishList = async function wishList(req: Request) {
       })
       .exec();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 

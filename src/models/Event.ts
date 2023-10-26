@@ -7,7 +7,7 @@ import { uploadImage } from '../utils/imageService';
 import { UserInter } from '../shared/types/userTypes';
 import { getEndOfDay, getStartOfTomorrow } from '../utils/timeHelper';
 import User from './User';
-import { unknownErrorMessage } from '../utils/errorHandlers';
+import { errorHandlerModel } from '../utils/errorHandlers';
 
 const eventSchema = new mongoose.Schema<EventInter, EventFuncInter>({
   organizer: {
@@ -108,8 +108,7 @@ eventSchema.statics.createNew = async function createNew(req: Request) {
     });
     return await event.save();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -119,8 +118,7 @@ eventSchema.statics.regUser = async function regUser(req: Request) {
     await this.findByIdAndUpdate(event, { $addToSet: { registeredUser: tokenUserId(req) } });
     return (await this.findById(event)) as EventInter;
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -140,8 +138,7 @@ eventSchema.statics.getAll = async function getAll(req: Request) {
       .lean()
       .exec();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -199,8 +196,7 @@ eventSchema.statics.getFiltered = async function getFiltered(req) {
       throw new Error('No filters selected');
     return await query.exec();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
@@ -212,8 +208,7 @@ eventSchema.statics.getOne = async function getOne(req) {
       .populate('organizer', 'userInfo.firstName userInfo.lastName userInfo.avatar.secure_url')
       .exec();
   } catch (error) {
-    if (error instanceof Error) return error.message;
-    return unknownErrorMessage;
+    return errorHandlerModel(error);
   }
 };
 
