@@ -12,12 +12,6 @@ const updateUserSchema = [
     .withMessage('The title must be a string.')
     .notEmpty()
     .withMessage('The title cannot be empty.'),
-
-  body('aboutMe')
-    .isString()
-    .withMessage('The title must be a string.')
-    .notEmpty()
-    .withMessage('The title cannot be empty.'),
 ];
 
 export default updateUserSchema;
