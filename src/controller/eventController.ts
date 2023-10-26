@@ -13,7 +13,7 @@ export async function createEvent(req: Request, res: Response) {
       return internalServerError(res);
     }
     // eslint-disable-next-line no-underscore-dangle
-    return res.status(200).json({ message: `Event: ${result._id}, created successfully` });
+    return res.status(200).json({ _id: result._id });
   } catch (error) {
     console.log(error);
     if (error instanceof Error) return notAcceptedError(res, error.message);

@@ -3,15 +3,15 @@ import { body } from 'express-validator';
 const updateUserSchema = [
   body('firstName')
     .isString()
-    .withMessage('The title must be a string.')
+    .withMessage('Your first name must be a string.')
     .notEmpty()
-    .withMessage('The title cannot be empty.'),
+    .withMessage('Your first name  cannot be empty.'),
 
   body('lastName')
     .isString()
-    .withMessage('The title must be a string.')
+    .withMessage('Your last name  must be a string.')
     .notEmpty()
-    .withMessage('The title cannot be empty.'),
+    .withMessage('Your last name  cannot be empty.'),
 ];
 
 export default updateUserSchema;
