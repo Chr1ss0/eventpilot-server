@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
-import { UserFuncInter, UserInter } from '../shared/types/userTypes';
+import { UpdateUserObjType, UserFuncInter, UserInter } from '../shared/types/userTypes';
 import { CustomErrType } from '../shared/types/sharedTypes';
 import { tokenUserId } from '../utils/token';
-// import { getZipData } from '../utils/geoHelper';
 import { deleteImage, uploadImage } from '../utils/imageService';
 
 const userSchema = new mongoose.Schema<UserInter, UserFuncInter>({
@@ -117,35 +116,33 @@ userSchema.statics.register = async function register(req: Request): Promise<Use
 
 userSchema.statics.edit = async function edit(req: Request) {
   try {
-    const userId = tokenUserId(req);
-    const user = await this.findById(userId);
-    if (!user) return 500;
-    if (user && req.file) {
+    const userUpdateObj: UpdateUserObjType = {};
+
+    if (req.file) {
+      const user = await this.findById(tokenUserId(req), { password: false, email: false });
+      if (!user) return 500;
       if (user.userInfo.avatar.public_id) await deleteImage(user.userInfo.avatar.public_id);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const { public_id, secure_url } = await uploadImage(req.file.buffer);
-      console.log(secure_url);
-      const updateAvatar = {
-        $set: {
-          'userInfo.avatar.secure_url': secure_url,
-          'userInfo.avatar.public_id': public_id,
-        },
-      };
-      await this.findByIdAndUpdate(userId, updateAvatar);
+      userUpdateObj['userInfo.avatar.secure_url'] = secure_url;
+      userUpdateObj['userInfo.avatar.public_id'] = public_id;
     }
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const { aboutMe, interest: interestString, firstName, lastName } = req.body;
-    const interest = interestString.replaceAll(' ', '').split(',');
-    //
-    const updateUser = {
-      $set: {
-        'userInfo.firstName': firstName,
-        'userInfo.lastName': lastName,
-        'userInfo.aboutMe': aboutMe,
-        'userInfo.interest': interest,
-      },
-    };
-    return await this.findByIdAndUpdate(userId, updateUser, { new: true });
+    const { aboutMe, interest, firstName, lastName, placeName, state, latitude, longitude } = req.body;
+
+    if (latitude && longitude && placeName && state) {
+      userUpdateObj['userInfo.defaultLocation.placeName'] = placeName;
+      userUpdateObj['userInfo.defaultLocation.state'] = state;
+      userUpdateObj['userInfo.defaultLocation.coordinates'] = [latitude, longitude];
+    }
+
+    const interestArray = interest.replaceAll(' ', '').split(',');
+
+    userUpdateObj['userInfo.firstName'] = firstName;
+    userUpdateObj['userInfo.lastName'] = lastName;
+    userUpdateObj['userInfo.aboutMe'] = aboutMe;
+    userUpdateObj['userInfo.interest'] = interestArray;
+
+    return await this.findByIdAndUpdate(tokenUserId(req), { $set: userUpdateObj }, { new: true });
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code as number; // Reasonable solution for error
@@ -157,9 +154,7 @@ userSchema.statics.login = async function login(req: Request) {
   const { email, password } = req.body;
   try {
     const user = await this.findOne({ email });
-
     if (!user || password !== user.password) return 403;
-
     return user;
   } catch (error: CustomErrType | unknown) {
     console.log(error);
@@ -173,9 +168,7 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
     const userId = tokenUserId(req);
     const { event } = req.params;
     const user = await this.findById(userId);
-
     if (!user) return 500;
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     if (user.bookmarks.includes(event))
@@ -189,9 +182,16 @@ userSchema.statics.bookmark = async function bookmark(req: Request) {
 };
 
 userSchema.statics.data = async function data(req: Request) {
+  const userId = tokenUserId(req);
   try {
-    const userId = tokenUserId(req);
-    return await this.findById(userId, { password: false });
+    return await this.findById(userId, { password: false })
+      .populate('reviews.postUser', 'userInfo.firstName userInfo.avatar.secure_url')
+      .populate({
+        path: 'createdEvents',
+        select: '-registeredUser',
+        options: { sort: { startDate: 1 } },
+      })
+      .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
     if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
@@ -203,7 +203,12 @@ userSchema.statics.dataId = async function dataId(req: Request) {
   const { userId } = req.params;
   try {
     return await this.findById(userId, { password: false, email: false })
-      .populate('reviews.postUser', 'postUser.firstName postUser.avatar.secure_url')
+      .populate('reviews.postUser', 'userInfo.firstName userInfo.avatar.secure_url')
+      .populate({
+        path: 'createdEvents',
+        select: '-registeredUser',
+        options: { sort: { startDate: 1 } },
+      })
       .exec();
   } catch (error: CustomErrType | unknown) {
     console.log(error);
@@ -229,26 +234,6 @@ userSchema.statics.postReview = async function postReview(req: Request) {
   }
 };
 
-userSchema.statics.editLocation = async function editLocation(req: Request) {
-  try {
-    const { placeName, state, latitude, longitude } = req.body;
-    if (!placeName || !state || !longitude || !latitude) throw new Error('Informations missing');
-    const userId = tokenUserId(req);
-    const updateLocation = {
-      $set: {
-        'userInfo.defaultLocation.placeName': placeName,
-        'userInfo.defaultLocation.state': state,
-        'userInfo.defaultLocation.coordinates': [latitude, longitude],
-      },
-    };
-    return await this.findByIdAndUpdate(userId, updateLocation, { new: true });
-  } catch (error: CustomErrType | unknown) {
-    console.log(error);
-    if (typeof error === 'object' && error !== null && 'code' in error) return error.code;
-    return 500;
-  }
-};
-
 userSchema.statics.follow = async function follow(req: Request) {
   try {
     const { followingId } = req.params;
@@ -257,15 +242,17 @@ userSchema.statics.follow = async function follow(req: Request) {
     const user = await this.findById(userId);
     const userToFollow = await this.findById(followingId);
 
-    if (!user || !userToFollow) return 500;
-
+    if (!user || !userToFollow || followingId === userId) return 500;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
-    if (user.connections.following.includes(followingId) && user._id !== followingId) {
+    if (user.connections.following.includes(followingId)) {
       await this.findByIdAndUpdate(userId, { $pull: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $pull: { 'connections.followers': userId } });
-    } else {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // eslint-disable-next-line no-underscore-dangle
+    } else if (!user.connections.following.includes(followingId)) {
       await this.findByIdAndUpdate(userId, { $addToSet: { 'connections.following': followingId } });
       await this.findByIdAndUpdate(followingId, { $addToSet: { 'connections.followers': userId } });
     }
@@ -277,6 +264,48 @@ userSchema.statics.follow = async function follow(req: Request) {
     return 500;
   }
 };
+
+userSchema.statics.wishList = async function wishList(req: Request) {
+  try {
+    return await this.findById(tokenUserId(req))
+      .select('-userInfo -password -email -connections -reviews')
+      .populate({
+        path: 'bookmarks',
+        select: ' -registeredUser -organizer',
+        match: {
+          'eventInfo.startDate': { $gte: new Date() },
+        },
+        options: { sort: { startDate: 1 } },
+      })
+      .populate({
+        path: 'bookedEvents',
+        select: 'eventInfo cover -registeredUser',
+        match: {
+          'eventInfo.startDate': { $gte: new Date() },
+        },
+        options: { sort: { startDate: 1 } },
+      })
+      .exec();
+  } catch (error) {
+    console.log(error);
+    return 500;
+  }
+};
+
+userSchema.virtual('createdEvents', {
+  ref: 'Event',
+  localField: '_id',
+  foreignField: 'organizer',
+});
+
+userSchema.virtual('bookedEvents', {
+  ref: 'Event',
+  localField: '_id',
+  foreignField: 'registeredUser',
+});
+
+userSchema.set('toObject', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true });
 
 const User = mongoose.model<UserInter, UserFuncInter>('User', userSchema);
 

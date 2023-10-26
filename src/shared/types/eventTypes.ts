@@ -14,24 +14,22 @@ export interface EventInter extends Document {
     description: string;
   };
   cover: CloudUrlType[];
-  registeredUser: {
-    _id: ObjectId;
-  };
+  registeredUser: ObjectId[];
 }
 
-export type EventFilters = {
-  category?: string;
-  location?: string | boolean;
+export type FilterObjType = {
+  'eventInfo.category'?: string;
+  'eventInfo.location.coordinates'?: string;
   distance?: string;
-  date?: string;
-  title?: unknown | string;
+  'eventInfo.startDate'?: { $gte: Date | number; $lte?: Date | number };
+  'eventInfo.title'?: unknown | string;
 };
 
 type ResponseType = EventInter | number;
 export interface EventFuncInter<T = ResponseType> extends Model<EventInter> {
   createNew(req: Request): Promise<T>;
   regUser(req: Request): Promise<T>;
-  getAll(): Promise<T>;
+  getAll(req: Request): Promise<T>;
   getOne(req: Request): Promise<T>;
   getFiltered(req: Request): Promise<T>;
 }

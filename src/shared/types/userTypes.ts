@@ -1,6 +1,7 @@
 import { Document, Model, ObjectId } from 'mongoose';
 import { Request } from 'express';
 import { CloudUrlType, LocationType } from './sharedTypes';
+import { EventInter } from './eventTypes';
 
 export interface UserInter extends Document {
   email: string;
@@ -24,7 +25,20 @@ export interface UserInter extends Document {
     following: ObjectId[];
     followers: ObjectId[];
   };
+  createdEvents?: EventInter[];
 }
+
+export type UpdateUserObjType = {
+  'userInfo.avatar.secure_url'?: string;
+  'userInfo.avatar.public_id'?: string;
+  'userInfo.defaultLocation.placeName'?: string;
+  'userInfo.defaultLocation.state'?: string;
+  'userInfo.defaultLocation.coordinates'?: [number, number];
+  'userInfo.firstName'?: string;
+  'userInfo.lastName'?: string;
+  'userInfo.aboutMe'?: string;
+  'userInfo.interest'?: string[];
+};
 
 type ResponseType = UserInter | number;
 
@@ -35,7 +49,7 @@ export interface UserFuncInter<T = ResponseType> extends Model<UserInter> {
   data(req: Request): Promise<T>;
   dataId(req: Request): Promise<T>;
   postReview(req: Request): Promise<T>;
-  editLocation(req: Request): Promise<T>;
   follow(req: Request): Promise<T>;
   edit(req: Request): Promise<T>;
+  wishList(req: Request): Promise<T>;
 }
