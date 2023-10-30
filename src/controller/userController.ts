@@ -21,8 +21,8 @@ export async function registerUser(req: Request, res: Response) {
 export async function loginUser(req: Request, res: Response) {
   try {
     const result = await User.login(req);
-    if (result instanceof Error) return forbiddenError(res, result.message);
-    if (typeof result === 'string' || typeof result === 'number') return internalServerError(res); // cant be of type number but want forbidden
+    if (typeof result === 'string') return forbiddenError(res, result);
+    if (result instanceof Error || typeof result === 'number') return internalServerError(res); // cant be of type number but want forbidden
     // eslint-disable-next-line no-underscore-dangle
     createTokenAndRes(res, result._id);
     return res.status(200).json({ message: 'Login successfully' });
