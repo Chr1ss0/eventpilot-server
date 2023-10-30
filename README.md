@@ -22,6 +22,9 @@
 [Jacub](https://github.com/FutureOneX)
 [Daniel](https://github.com/DanielKirchenbauer)
 
+### Involved in Backend:
+[Chris]([https://github.com/Matthew7991](https://github.com/Chr1ss0))
+
 ### Description
 
 ## Express Server with Mongoose in TypeScript
